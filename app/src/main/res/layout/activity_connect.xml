@@ -35,7 +35,8 @@
                 android:ems="10"
                 android:id="@+id/ipSlot1"
                 android:layout_weight="1"
-                android:textAlignment="center" />
+                android:textAlignment="center"
+                android:text="10" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -53,7 +54,8 @@
                 android:ems="10"
                 android:id="@+id/ipSlot2"
                 android:layout_weight="1"
-                android:textAlignment="center" />
+                android:textAlignment="center"
+                android:text="42" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -71,7 +73,8 @@
                 android:ems="10"
                 android:id="@+id/ipSlot3"
                 android:layout_weight="1"
-                android:textAlignment="center" />
+                android:textAlignment="center"
+                android:text="0" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -89,7 +92,8 @@
                 android:ems="10"
                 android:id="@+id/ipSlot4"
                 android:layout_weight="1"
-                android:textAlignment="center" />
+                android:textAlignment="center"
+                android:text="55" />
 
         </LinearLayout>
 

@@ -23,6 +23,7 @@ import org.json.JSONObject;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.util.HashMap;
@@ -76,13 +77,13 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
 
         @Override
         public void onClick(View v) {
-            action = 2;
+//            btnState = v.getge
         }
     }
 
     private class SocketThread extends Thread {
 
-        BufferedWriter writer;
+        Writer writer;
 
         @Override
         public void run() {
@@ -99,15 +100,15 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
                 public void run() {
                     if (socket.isConnected()) {
                         writeAction(makeActionJson());
-                        Log.i("json", makeActionJson().toString());
+//                        Log.i("json", makeActionJson().toString());
                     }else{
                         Log.i("socket", "not connect");
                     }
-                    mHandler.postDelayed(this, 20);
+
                 }
             };
 
-            mHandler.postDelayed(launch, 50);
+            mHandler.postDelayed(launch, 100);
             Looper.loop();
         }
 
@@ -215,6 +216,7 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
             try {
                 returnJson.put("action", "button");
                 returnJson.put("btnState", makeBtnStateJson());
+                btnState = 0;
                 return returnJson;
             } catch (JSONException e) {
                 e.printStackTrace();
