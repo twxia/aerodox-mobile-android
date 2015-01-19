@@ -13,6 +13,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
@@ -23,6 +24,7 @@ import org.json.JSONObject;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.util.HashMap;
@@ -36,7 +38,7 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
     Socket socket;
 
     int action = 1; // 1=move, 2=swipe
-    int btnState = 0; // 0=nothing, 1=left, 2=middle, 3=right
+    int[] btnState = new int[]{0, 0}; // [0] 0=nothing, 1=left, 2=middle, 3=right , [1] ispress
 
     double[] accVec = new double[]{0, 0, 0};
     double[] gyroVec = new double[]{0, 0, 0};
@@ -65,24 +67,33 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
         btnLeft = (Button) this.findViewById(R.id.btnLeft);
         btnRight = (Button) this.findViewById(R.id.btnRight);
 
-        btnLeft.setOnClickListener(new ButtonListener());
-        btnRight.setOnClickListener(new ButtonListener());
+        btnLeft.setOnTouchListener(new ButtonListener());
+        btnRight.setOnTouchListener(new ButtonListener());
 
         SocketThread s = new SocketThread();
         s.start();
     }
 
-    private class ButtonListener implements View.OnClickListener {
+    private class ButtonListener implements View.OnTouchListener {
 
         @Override
-        public void onClick(View v) {
-            action = 2;
+        public boolean onTouch(View v, MotionEvent event) {
+            switch (event.getAction()){
+                case MotionEvent.ACTION_DOWN:
+                    btnState[1] = 1;
+                    break;
+                case MotionEvent.ACTION_UP:
+                    btnState[1] = 0;
+                    break;
+            }
+            btnState[0] = (v.getId() == R.id.btnLeft) ? 1 : 2;
+            return false;
         }
     }
 
     private class SocketThread extends Thread {
 
-        BufferedWriter writer;
+        Writer writer;
 
         @Override
         public void run() {
@@ -99,7 +110,6 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
                 public void run() {
                     if (socket.isConnected()) {
                         writeAction(makeActionJson());
-                        Log.i("json", makeActionJson().toString());
                     }else{
                         Log.i("socket", "not connect");
                     }
@@ -202,8 +212,8 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
     private JSONObject makeBtnStateJson() {
         Map map = new HashMap();
 
-        map.put("isPress", false);
-        map.put("num", btnState);
+        map.put("num", btnState[0]);
+        map.put("isPress", btnState[1]);
 
         return new JSONObject(map);
     }
@@ -211,15 +221,17 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
     private JSONObject makeActionJson(){
         JSONObject returnJson = new JSONObject();
 
-        if(btnState != 0) {
+        if(btnState[0] != 0) {
             try {
                 returnJson.put("action", "button");
                 returnJson.put("btnState", makeBtnStateJson());
+                btnState[0] = 0;
                 return returnJson;
             } catch (JSONException e) {
                 e.printStackTrace();
             }
         }
+
         switch(action){
             case 1:
                 try {
