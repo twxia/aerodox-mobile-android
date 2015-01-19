@@ -14,6 +14,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
+import android.view.SurfaceView;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
@@ -45,12 +46,13 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
     double[] accVec = new double[]{0, 0, 0};
     double[] gyroVec = new double[]{0, 0, 0};
     float[] angleVec = new float[]{0, 0, 0, 0, 0, 0, 0, 0, 0};
-
+    double[] touchPercentage = new double[]{0, 0};
     SensorManager sensorMgr;
     Sensor acc, gyro, angle;
 
     Button btnLeft, btnRight;
 
+    boolean isTouch = false;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -73,6 +75,23 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
         btnLeft.setOnTouchListener(new ButtonListener());
         btnRight.setOnTouchListener(new ButtonListener());
 
+        SurfaceView touchPad = (SurfaceView) this.findViewById(R.id.touchPad);
+        touchPad.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                switch (event.getAction()) {
+                    case MotionEvent.ACTION_DOWN:
+                    case MotionEvent.ACTION_MOVE:
+                        isTouch = true;
+                        touchPercentage[0] = event.getX() / v.getWidth();
+                        touchPercentage[1] = event.getY() / v.getHeight();
+                        break;
+                    case MotionEvent.ACTION_UP:
+                        isTouch = false;
+                }
+                return true;
+            }
+        });
         s.start();
     }
 
@@ -117,7 +136,7 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
                     }else{
                         Log.i("socket", "not connect");
                     }
-                    mHandler.postDelayed(this, 20);
+                    mHandler.postDelayed(this, 5);
                 }
             };
 
@@ -161,7 +180,7 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
         @Override
         public void interrupt() {
             super.interrupt();
-            disconnectSocket();
+            //disconnectSocket();
         }
     }
 
@@ -225,6 +244,15 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
         return obj;
     }
 
+    private JSONObject makePosPtgJson() throws JSONException {
+        JSONObject obj = new JSONObject();
+
+        obj.put("x", touchPercentage[0]);
+        obj.put("y", touchPercentage[1]);
+
+        return obj;
+    }
+
     private JSONObject makeActionJson(){
         JSONObject returnJson = new JSONObject();
 
@@ -239,11 +267,23 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
             }
         }
 
+        if (isTouch) {
+            try {
+                returnJson.put("action", "touch");
+                returnJson.put("posPtg", makePosPtgJson());
+                return returnJson;
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+
+        }
+
         switch(action){
             case 1:
                 try {
                     returnJson.put("action", "move");
-                    returnJson.put("acc", makeAccJson());
+//                    returnJson.put("acc", makeAccJson());
+                    returnJson.put("gyro", makeGyroJson());
                     returnJson.put("rotMat", makeRotationArray());
                 } catch (JSONException e) {
                     e.printStackTrace();
@@ -280,18 +320,18 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
     protected void onResume() {
         super.onResume();
 
-        sensorMgr.registerListener(this, acc, SensorManager.SENSOR_DELAY_NORMAL);
+        /*sensorMgr.registerListener(this, acc, SensorManager.SENSOR_DELAY_NORMAL);
         sensorMgr.registerListener(this, gyro, SensorManager.SENSOR_DELAY_NORMAL);
-        sensorMgr.registerListener(this, angle, SensorManager.SENSOR_DELAY_NORMAL);
+        sensorMgr.registerListener(this, angle, SensorManager.SENSOR_DELAY_NORMAL);*/
     }
 
-    @Override
+    /*@Override
     protected void onStop() {
         super.onStop();
 
         sensorMgr.unregisterListener(this);
         s.interrupt();
-    }
+    }*/
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
