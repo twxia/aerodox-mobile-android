@@ -17,8 +17,8 @@
             android:layout_centerVertical="true"
             android:layout_alignParentLeft="true"
             android:layout_alignParentStart="true"
-            android:layout_marginTop="20dp"
-            android:layout_marginBottom="20dp">
+            android:layout_marginTop="10dp"
+            android:layout_marginBottom="10dp">
 
             <TextView
                 android:layout_width="wrap_content"
@@ -93,17 +93,26 @@
 
         </LinearLayout>
 
+        <ListView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/ipList"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:layout_below="@+id/linearLayout"
+            android:layout_above="@+id/btnConnect" />
+
         <Button
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Connect"
             android:id="@+id/btnConnect"
             android:layout_gravity="center_horizontal"
-            android:layout_below="@+id/linearLayout"
-            android:layout_alignParentLeft="true"
-            android:layout_alignParentStart="true"
-            android:layout_marginLeft="30dp"
-            android:layout_marginRight="30dp" />
+            android:layout_alignParentBottom="true"
+            android:layout_alignLeft="@+id/imgLogo"
+            android:layout_alignStart="@+id/imgLogo"
+            android:layout_alignRight="@+id/imgLogo"
+            android:layout_alignEnd="@+id/imgLogo" />
 
         <ImageView
             android:layout_width="wrap_content"
@@ -116,5 +125,6 @@
             android:layout_alignParentEnd="true"
             android:layout_above="@+id/linearLayout"
             android:layout_margin="35dp" />
+
     </RelativeLayout>
 </LinearLayout>

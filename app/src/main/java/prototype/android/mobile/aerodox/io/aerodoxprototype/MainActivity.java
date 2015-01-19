@@ -33,7 +33,7 @@ import java.util.Map;
 
 public class MainActivity extends ActionBarActivity implements SensorEventListener {
     String ip = "";
-    final int port = 1810;
+    int port;
 
     SocketThread s = new SocketThread();
     Socket socket;
@@ -57,6 +57,7 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
 
         Intent intent = this.getIntent();
         ip = intent.getStringExtra("ip");
+        port = intent.getIntExtra("port", 1810);
 
         Log.i("connection", "connect to ip: " + ip);
 
@@ -81,12 +82,14 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
             switch (event.getAction()){
                 case MotionEvent.ACTION_DOWN:
                     btnState[1] = 1;
+                    Log.i("touch", "down");
                     break;
                 case MotionEvent.ACTION_UP:
                     btnState[1] = 0;
+                    Log.i("touch", "up");
                     break;
             }
-            btnState[0] = (v.getId() == R.id.btnLeft) ? 1 : 2;
+            btnState[0] = (v.getId() == R.id.btnLeft) ? 1 : 3;
             return false;
         }
     }
@@ -242,7 +245,7 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
             case 1:
                 try {
                     returnJson.put("action", "move");
-                    returnJson.put("gyro", makeGyroJson());
+                    returnJson.put("acc", makeAccJson());
                     returnJson.put("angle", makeAngleJson());
                 } catch (JSONException e) {
                     e.printStackTrace();
