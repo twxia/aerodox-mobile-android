@@ -1,6 +1,5 @@
 package prototype.android.mobile.aerodox.io.aerodoxprototype;
 
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -29,8 +28,6 @@ import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.net.InetAddress;
 import java.net.Socket;
-import java.util.HashMap;
-import java.util.Map;
 
 
 public class MainActivity extends ActionBarActivity implements SensorEventListener {
@@ -46,7 +43,8 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
     double[] accVec = new double[]{0, 0, 0};
     double[] gyroVec = new double[]{0, 0, 0};
     float[] angleVec = new float[]{0, 0, 0, 0, 0, 0, 0, 0, 0};
-    double[] touchPercentage = new double[]{0, 0};
+    double[] touchStart = new double[]{0, 0};
+    double[] touchDelta = new double[]{0, 0};
     SensorManager sensorMgr;
     Sensor acc, gyro, angle;
 
@@ -81,10 +79,14 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
             public boolean onTouch(View v, MotionEvent event) {
                 switch (event.getAction()) {
                     case MotionEvent.ACTION_DOWN:
+                        touchStart[0] = event.getX();
+                        touchStart[1] = event.getY();
                     case MotionEvent.ACTION_MOVE:
                         isTouch = true;
-                        touchPercentage[0] = event.getX() / v.getWidth();
-                        touchPercentage[1] = event.getY() / v.getHeight();
+                        touchDelta[0] = event.getX() - touchStart[0];
+                        touchDelta[1] = event.getY() - touchStart[1];
+                        touchStart[0] = event.getX();
+                        touchStart[1] = event.getY();
                         break;
                     case MotionEvent.ACTION_UP:
                         isTouch = false;
@@ -239,16 +241,16 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
         JSONObject obj = new JSONObject();
 
         obj.put("num", btnState[0]);
-        obj.put("isPress", btnState[1]);
+        obj.put("isPress", btnState[1] == 1? true: false);
 
         return obj;
     }
 
-    private JSONObject makePosPtgJson() throws JSONException {
+    private JSONObject makePosMovJson() throws JSONException {
         JSONObject obj = new JSONObject();
 
-        obj.put("x", touchPercentage[0]);
-        obj.put("y", touchPercentage[1]);
+        obj.put("x", touchDelta[0]);
+        obj.put("y", touchDelta[1]);
 
         return obj;
     }
@@ -270,7 +272,7 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
         if (isTouch) {
             try {
                 returnJson.put("action", "touch");
-                returnJson.put("posPtg", makePosPtgJson());
+                returnJson.put("touchMov", makePosMovJson());
                 return returnJson;
             } catch (JSONException e) {
                 e.printStackTrace();
