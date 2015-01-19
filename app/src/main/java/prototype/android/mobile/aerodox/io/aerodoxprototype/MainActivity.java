@@ -244,7 +244,7 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
                 try {
                     returnJson.put("action", "move");
                     returnJson.put("acc", makeAccJson());
-                    returnJson.put("angle", makeRotationArray());
+                    returnJson.put("rotMat", makeRotationArray());
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
