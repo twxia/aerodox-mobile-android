@@ -18,6 +18,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -43,7 +44,7 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
 
     double[] accVec = new double[]{0, 0, 0};
     double[] gyroVec = new double[]{0, 0, 0};
-    double[] angleVec = new double[]{0, 0, 0};
+    float[] angleVec = new float[]{0, 0, 0, 0, 0, 0, 0, 0, 0};
 
     SensorManager sensorMgr;
     Sensor acc, gyro, angle;
@@ -178,9 +179,7 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
                 gyroVec[2] = (double) event.values[2];
                 break;
             case Sensor.TYPE_ROTATION_VECTOR:
-                angleVec[0] = (double) event.values[0];
-                angleVec[1] = (double) event.values[1];
-                angleVec[2] = (double) event.values[2];
+                SensorManager.getRotationMatrixFromVector(angleVec, event.values);
                 break;
             default:
                 Toast.makeText(getApplicationContext(), "No Sensor Responds", Toast.LENGTH_SHORT).show();
@@ -188,43 +187,42 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
     }
 
 
-    private JSONObject makeAccJson() {
-        Map map = new HashMap();
+    private JSONObject makeAccJson() throws JSONException {
+        JSONObject obj = new JSONObject();
 
-        map.put("x", accVec[0]);
-        map.put("y", accVec[1]);
-        map.put("z", accVec[2]);
+        obj.put("x", accVec[0]);
+        obj.put("y", accVec[1]);
+        obj.put("z", accVec[2]);
 
-        return new JSONObject(map);
+        return obj;
     }
 
-    private JSONObject makeGyroJson() {
-        Map map = new HashMap();
+    private JSONObject makeGyroJson() throws JSONException {
+        JSONObject obj = new JSONObject();
 
-        map.put("x", gyroVec[0]);
-        map.put("y", gyroVec[1]);
-        map.put("z", gyroVec[2]);
+        obj.put("x", gyroVec[0]);
+        obj.put("y", gyroVec[1]);
+        obj.put("z", gyroVec[2]);
 
-        return new JSONObject(map);
+        return obj;
     }
 
-    private JSONObject makeAngleJson() {
-        Map map = new HashMap();
+    private JSONArray makeRotationArray() throws JSONException {
+        JSONArray array = new JSONArray();
+        for (int i = 0; i < angleVec.length; i++) {
+            array.put((double)angleVec[i]);
+        }
 
-        map.put("x", angleVec[0]);
-        map.put("y", angleVec[1]);
-        map.put("z", angleVec[2]);
-
-        return new JSONObject(map);
+        return array;
     }
 
-    private JSONObject makeBtnStateJson() {
-        Map map = new HashMap();
+    private JSONObject makeBtnStateJson() throws JSONException {
+        JSONObject obj = new JSONObject();
 
-        map.put("num", btnState[0]);
-        map.put("isPress", btnState[1]);
+        obj.put("num", btnState[0]);
+        obj.put("isPress", btnState[1]);
 
-        return new JSONObject(map);
+        return obj;
     }
 
     private JSONObject makeActionJson(){
@@ -246,7 +244,7 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
                 try {
                     returnJson.put("action", "move");
                     returnJson.put("acc", makeAccJson());
-                    returnJson.put("angle", makeAngleJson());
+                    returnJson.put("angle", makeRotationArray());
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
