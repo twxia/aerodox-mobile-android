@@ -28,15 +28,15 @@ import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.net.InetAddress;
 import java.net.Socket;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
 
 public class MainActivity extends ActionBarActivity implements SensorEventListener {
     String ip = "";
-    final int port = 1810;
+    int port;
 
+    SocketThread s = new SocketThread();
     Socket socket;
 
     int action = 1; // 1=move, 2=swipe
@@ -58,6 +58,7 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
 
         Intent intent = this.getIntent();
         ip = intent.getStringExtra("ip");
+        port = intent.getIntExtra("port", 1810);
 
         Log.i("connection", "connect to ip: " + ip);
 
@@ -72,7 +73,6 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
         btnLeft.setOnTouchListener(new ButtonListener());
         btnRight.setOnTouchListener(new ButtonListener());
 
-        SocketThread s = new SocketThread();
         s.start();
     }
 
@@ -83,9 +83,11 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
             switch (event.getAction()){
                 case MotionEvent.ACTION_DOWN:
                     btnState[1] = 1;
+                    Log.i("touch", "down");
                     break;
                 case MotionEvent.ACTION_UP:
                     btnState[1] = 0;
+                    Log.i("touch", "up");
                     break;
             }
             btnState[0] = (v.getId() == R.id.btnLeft) ? 1 : 3;
@@ -155,6 +157,12 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
                 e.printStackTrace();
             }
         }
+
+        @Override
+        public void interrupt() {
+            super.interrupt();
+            disconnectSocket();
+        }
     }
 
     @Override
@@ -172,7 +180,6 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
                 break;
             case Sensor.TYPE_ROTATION_VECTOR:
                 SensorManager.getRotationMatrixFromVector(angleVec, event.values);
-
                 break;
             default:
                 Toast.makeText(getApplicationContext(), "No Sensor Responds", Toast.LENGTH_SHORT).show();
@@ -180,43 +187,42 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
     }
 
 
-    private JSONObject makeAccJson() {
-        Map map = new HashMap();
+    private JSONObject makeAccJson() throws JSONException {
+        JSONObject obj = new JSONObject();
 
-        map.put("x", accVec[0]);
-        map.put("y", accVec[1]);
-        map.put("z", accVec[2]);
+        obj.put("x", accVec[0]);
+        obj.put("y", accVec[1]);
+        obj.put("z", accVec[2]);
 
-        return new JSONObject(map);
+        return obj;
     }
 
-    private JSONObject makeGyroJson() {
-        Map map = new HashMap();
+    private JSONObject makeGyroJson() throws JSONException {
+        JSONObject obj = new JSONObject();
 
-        map.put("x", gyroVec[0]);
-        map.put("y", gyroVec[1]);
-        map.put("z", gyroVec[2]);
+        obj.put("x", gyroVec[0]);
+        obj.put("y", gyroVec[1]);
+        obj.put("z", gyroVec[2]);
 
-        return new JSONObject(map);
+        return obj;
     }
-
 
     private JSONArray makeRotationArray() throws JSONException {
         JSONArray array = new JSONArray();
         for (int i = 0; i < angleVec.length; i++) {
-                array.put((double)angleVec[i]);
+            array.put((double)angleVec[i]);
         }
 
         return array;
     }
 
-    private JSONObject makeBtnStateJson() {
-        Map map = new HashMap();
+    private JSONObject makeBtnStateJson() throws JSONException {
+        JSONObject obj = new JSONObject();
 
-        map.put("num", btnState[0]);
-        map.put("isPress", btnState[1] == 1? true: false);
+        obj.put("num", btnState[0]);
+        obj.put("isPress", btnState[1]);
 
-        return new JSONObject(map);
+        return obj;
     }
 
     private JSONObject makeActionJson(){
@@ -279,6 +285,13 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
         sensorMgr.registerListener(this, angle, SensorManager.SENSOR_DELAY_NORMAL);
     }
 
+    @Override
+    protected void onStop() {
+        super.onStop();
+
+        sensorMgr.unregisterListener(this);
+        s.interrupt();
+    }
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
