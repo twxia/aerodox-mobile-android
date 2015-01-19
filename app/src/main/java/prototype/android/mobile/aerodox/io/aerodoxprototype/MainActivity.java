@@ -1,5 +1,6 @@
 package prototype.android.mobile.aerodox.io.aerodoxprototype;
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -12,6 +13,8 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.Button;
 import android.widget.Toast;
 
 import org.json.JSONException;
@@ -32,13 +35,17 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
 
     Socket socket;
 
-    int action = 1; // 1=move, 2=button, 3=swipe
+    int action = 1; // 1=move, 2=swipe
+    int btnState = 0; // 0=nothing, 1=left, 2=middle, 3=right
+
     double[] accVec = new double[]{0, 0, 0};
     double[] gyroVec = new double[]{0, 0, 0};
     double[] angleVec = new double[]{0, 0, 0};
 
     SensorManager sensorMgr;
     Sensor acc, gyro, angle;
+
+    Button btnLeft, btnRight;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,9 +62,22 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
         gyro = sensorMgr.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
         angle = sensorMgr.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
 
+        btnLeft = (Button) this.findViewById(R.id.btnLeft);
+        btnRight = (Button) this.findViewById(R.id.btnRight);
+
+        btnLeft.setOnClickListener(new ButtonListener());
+        btnRight.setOnClickListener(new ButtonListener());
+
         SocketThread s = new SocketThread();
         s.start();
+    }
 
+    private class ButtonListener implements View.OnClickListener {
+
+        @Override
+        public void onClick(View v) {
+            action = 2;
+        }
     }
 
     private class SocketThread extends Thread {
@@ -83,7 +103,7 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
                     }else{
                         Log.i("socket", "not connect");
                     }
-                    mHandler.postDelayed(this, 50);
+                    mHandler.postDelayed(this, 20);
                 }
             };
 
@@ -183,7 +203,7 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
         Map map = new HashMap();
 
         map.put("isPress", false);
-        map.put("num", 5);
+        map.put("num", btnState);
 
         return new JSONObject(map);
     }
@@ -191,20 +211,21 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
     private JSONObject makeActionJson(){
         JSONObject returnJson = new JSONObject();
 
+        if(btnState != 0) {
+            try {
+                returnJson.put("action", "button");
+                returnJson.put("btnState", makeBtnStateJson());
+                return returnJson;
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
         switch(action){
             case 1:
                 try {
                     returnJson.put("action", "move");
-                    returnJson.put("acc", makeAccJson());
+                    returnJson.put("gyro", makeGyroJson());
                     returnJson.put("angle", makeAngleJson());
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-                break;
-            case 2:
-                try {
-                    returnJson.put("action", "button");
-                    returnJson.put("btnState", makeBtnStateJson());
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
