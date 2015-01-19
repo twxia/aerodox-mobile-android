@@ -35,6 +35,7 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
     String ip = "";
     final int port = 1810;
 
+    SocketThread s = new SocketThread();
     Socket socket;
 
     int action = 1; // 1=move, 2=swipe
@@ -70,7 +71,6 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
         btnLeft.setOnTouchListener(new ButtonListener());
         btnRight.setOnTouchListener(new ButtonListener());
 
-        SocketThread s = new SocketThread();
         s.start();
     }
 
@@ -152,6 +152,12 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
             } catch (IOException e) {
                 e.printStackTrace();
             }
+        }
+
+        @Override
+        public void interrupt() {
+            super.interrupt();
+            disconnectSocket();
         }
     }
 
@@ -278,6 +284,13 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
         sensorMgr.registerListener(this, angle, SensorManager.SENSOR_DELAY_NORMAL);
     }
 
+    @Override
+    protected void onStop() {
+        super.onStop();
+
+        sensorMgr.unregisterListener(this);
+        s.interrupt();
+    }
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
