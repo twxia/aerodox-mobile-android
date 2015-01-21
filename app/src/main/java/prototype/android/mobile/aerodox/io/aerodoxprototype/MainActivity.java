@@ -26,16 +26,19 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.net.UnknownHostException;
 
 
 public class MainActivity extends ActionBarActivity implements SensorEventListener {
-    String ip = "";
+    InetAddress address;
     int port;
 
     SocketThread s = new SocketThread();
-    Socket socket;
+    DatagramSocket socket;
 
     int action = 1; // 1=move, 2=swipe
     int[] btnState = new int[]{0, 0}; // [0] 0=nothing, 1=left, 2=middle, 3=right , [1] ispress
@@ -51,14 +54,23 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
     Button btnLeft, btnRight;
 
     boolean isTouch = false;
+
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
         Intent intent = this.getIntent();
-        ip = intent.getStringExtra("ip");
-        port = intent.getIntExtra("port", 1810);
+        String ip = intent.getStringExtra("ip");
+        try {
+            address = InetAddress.getByName(ip);
+            port = intent.getIntExtra("port", 1810);
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
+        }
+
 
         Log.i("connection", "connect to ip: " + ip);
 
@@ -87,10 +99,12 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
                         touchDelta[1] = event.getY() - touchStart[1];
                         touchStart[0] = event.getX();
                         touchStart[1] = event.getY();
+                        s.post();
                         break;
                     case MotionEvent.ACTION_UP:
                         isTouch = false;
                 }
+
                 return true;
             }
         });
@@ -101,6 +115,7 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
 
         @Override
         public boolean onTouch(View v, MotionEvent event) {
+
             switch (event.getAction()){
                 case MotionEvent.ACTION_DOWN:
                     btnState[1] = 1;
@@ -112,6 +127,7 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
                     break;
             }
             btnState[0] = (v.getId() == R.id.btnLeft) ? 1 : 3;
+            s.post();
             return false;
         }
     }
@@ -119,72 +135,70 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
     private class SocketThread extends Thread {
 
         Writer writer;
+        Handler mHandler;
+
+        Runnable launch = new Runnable() {
+            @Override
+            public void run() {
+                if (socket.isConnected()) {
+                    writeAction(makeActionJson());
+                }else{
+                    Log.i("socket", "not connect");
+                }
+
+            }
+        };
 
         @Override
         public void run() {
             super.run();
+            connectSocket();
 
             Looper.prepare();
-            final Handler mHandler = new Handler();
-
-
-            connectSocket(ip, port);
-
-            Runnable launch = new Runnable() {
-                @Override
-                public void run() {
-                    if (socket.isConnected()) {
-                        writeAction(makeActionJson());
-                    }else{
-                        Log.i("socket", "not connect");
-                    }
-                    mHandler.postDelayed(this, 5);
-                }
-            };
-
-            mHandler.postDelayed(launch, 50);
+            mHandler = new Handler();
             Looper.loop();
         }
 
-        private void connectSocket(String ipString, int port) {
-            InetAddress address;
+        private void connectSocket() {
 
             try {
-                address = InetAddress.getByName(ipString);
-                socket = new Socket(address, port);
-
-                writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
-                writer.write("[");
+                socket = new DatagramSocket();
+                socket.connect(address, port);
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
 
         private void disconnectSocket() {
-            try {
-                writer.write("]");
-                writer.close();
                 socket.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
         }
 
         private void writeAction(JSONObject jsonObject) {
             try {
-                writer.write(jsonObject.toString() + ",");
-                writer.flush();
+                byte[] data = jsonObject.toString().getBytes();
+                DatagramPacket packet = new DatagramPacket(data, data.length);
+                socket.send(packet);
+
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
 
-        @Override
+        /*@Override
         public void interrupt() {
             super.interrupt();
             //disconnectSocket();
+        }*/
+
+        void post() {
+            if (mHandler != null) {
+                mHandler.post(launch);
+            }
         }
+
     }
+
+
 
     @Override
     public void onSensorChanged(SensorEvent event) {
@@ -205,6 +219,8 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
             default:
                 Toast.makeText(getApplicationContext(), "No Sensor Responds", Toast.LENGTH_SHORT).show();
         }
+        s.post();
+
     }
 
 
@@ -322,9 +338,9 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
     protected void onResume() {
         super.onResume();
 
-        /*sensorMgr.registerListener(this, acc, SensorManager.SENSOR_DELAY_NORMAL);
-        sensorMgr.registerListener(this, gyro, SensorManager.SENSOR_DELAY_NORMAL);
-        sensorMgr.registerListener(this, angle, SensorManager.SENSOR_DELAY_NORMAL);*/
+        sensorMgr.registerListener(this, acc, SensorManager.SENSOR_DELAY_GAME);
+        sensorMgr.registerListener(this, gyro, SensorManager.SENSOR_DELAY_GAME);
+        sensorMgr.registerListener(this, angle, SensorManager.SENSOR_DELAY_GAME);
     }
 
     /*@Override
