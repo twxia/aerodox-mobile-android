@@ -22,14 +22,11 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.BufferedWriter;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
-import java.net.Socket;
 import java.net.UnknownHostException;
 
 
@@ -43,13 +40,13 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
     int action = 1; // 1=move, 2=swipe
     int[] btnState = new int[]{0, 0}; // [0] 0=nothing, 1=left, 2=middle, 3=right , [1] ispress
 
-    double[] accVec = new double[]{0, 0, 0};
-    double[] gyroVec = new double[]{0, 0, 0};
-    float[] angleVec = new float[]{0, 0, 0, 0, 0, 0, 0, 0, 0};
-    double[] touchStart = new double[]{0, 0};
-    double[] touchDelta = new double[]{0, 0};
+    float[] accVec = new float[]{0, 0, 0};
+    float[] gyroVec = new float[]{0, 0, 0};
+    float[] rotVec = new float[]{0, 0, 0};
+    float[] touchStart = new float[]{0, 0};
+    float[] touchDelta = new float[]{0, 0};
     SensorManager sensorMgr;
-    Sensor acc, gyro, angle;
+    Sensor acc, gyro, rot;
 
     Button btnLeft, btnRight;
 
@@ -77,7 +74,7 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
         sensorMgr = (SensorManager) getSystemService(SENSOR_SERVICE);
         acc = sensorMgr.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
         gyro = sensorMgr.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
-        angle = sensorMgr.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
+        rot = sensorMgr.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
 
         btnLeft = (Button) this.findViewById(R.id.btnLeft);
         btnRight = (Button) this.findViewById(R.id.btnRight);
@@ -204,17 +201,19 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
     public void onSensorChanged(SensorEvent event) {
         switch (event.sensor.getType()){
             case Sensor.TYPE_LINEAR_ACCELERATION:
-                accVec[0] = (double) event.values[0];
-                accVec[1] = (double) event.values[1];
-                accVec[2] = (double) event.values[2];
+                accVec[0] = event.values[0];
+                accVec[1] = event.values[1];
+                accVec[2] = event.values[2];
                 break;
             case Sensor.TYPE_GYROSCOPE:
-                gyroVec[0] = (double) event.values[0];
-                gyroVec[1] = (double) event.values[1];
-                gyroVec[2] = (double) event.values[2];
+                gyroVec[0] = event.values[0];
+                gyroVec[1] = event.values[1];
+                gyroVec[2] = event.values[2];
                 break;
             case Sensor.TYPE_ROTATION_VECTOR:
-                SensorManager.getRotationMatrixFromVector(angleVec, event.values);
+                rotVec[0] = event.values[0];
+                rotVec[1] = event.values[1];
+                rotVec[2] = event.values[2];
                 break;
             default:
                 Toast.makeText(getApplicationContext(), "No Sensor Responds", Toast.LENGTH_SHORT).show();
@@ -244,13 +243,14 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
         return obj;
     }
 
-    private JSONArray makeRotationArray() throws JSONException {
-        JSONArray array = new JSONArray();
-        for (int i = 0; i < angleVec.length; i++) {
-            array.put((double)angleVec[i]);
-        }
+    private JSONObject makeRotVecJson() throws JSONException {
+        JSONObject obj = new JSONObject();
 
-        return array;
+        obj.put("x", rotVec[0]);
+        obj.put("y", rotVec[1]);
+        obj.put("z", rotVec[2]);
+
+        return obj;
     }
 
     private JSONObject makeBtnStateJson() throws JSONException {
@@ -301,8 +301,8 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
                 try {
                     returnJson.put("action", "move");
 //                    returnJson.put("acc", makeAccJson());
-                    returnJson.put("gyro", makeGyroJson());
-                    returnJson.put("rotMat", makeRotationArray());
+//                    returnJson.put("gyro", makeGyroJson());
+                    returnJson.put("rotVec", makeRotVecJson());
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
@@ -338,9 +338,9 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
     protected void onResume() {
         super.onResume();
 
-        sensorMgr.registerListener(this, acc, SensorManager.SENSOR_DELAY_GAME);
-        sensorMgr.registerListener(this, gyro, SensorManager.SENSOR_DELAY_GAME);
-        sensorMgr.registerListener(this, angle, SensorManager.SENSOR_DELAY_GAME);
+        //sensorMgr.registerListener(this, acc, SensorManager.SENSOR_DELAY_GAME);
+        //sensorMgr.registerListener(this, gyro, SensorManager.SENSOR_DELAY_GAME);
+        sensorMgr.registerListener(this, rot, SensorManager.SENSOR_DELAY_GAME);
     }
 
     /*@Override
