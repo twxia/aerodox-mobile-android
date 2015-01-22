@@ -28,6 +28,7 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.nio.charset.Charset;
 
 
 public class MainActivity extends ActionBarActivity implements SensorEventListener {
@@ -40,11 +41,11 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
     int action = 1; // 1=move, 2=swipe
     int[] btnState = new int[]{0, 0}; // [0] 0=nothing, 1=left, 2=middle, 3=right , [1] ispress
 
-    float[] accVec = new float[]{0, 0, 0};
-    float[] gyroVec = new float[]{0, 0, 0};
-    float[] rotVec = new float[]{0, 0, 0};
-    float[] touchStart = new float[]{0, 0};
-    float[] touchDelta = new float[]{0, 0};
+    double[] accVec = new double[]{0, 0, 0};
+    double[] gyroVec = new double[]{0, 0, 0};
+    double[] rotVec = new double[]{0, 0, 0};
+    double[] touchStart = new double[]{0, 0};
+    double[] touchDelta = new double[]{0, 0};
     SensorManager sensorMgr;
     Sensor acc, gyro, rot;
 
@@ -129,6 +130,8 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
         }
     }
 
+
+
     private class SocketThread extends Thread {
 
         Writer writer;
@@ -172,6 +175,7 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
 
         private void writeAction(JSONObject jsonObject) {
             try {
+
                 byte[] data = jsonObject.toString().getBytes();
                 DatagramPacket packet = new DatagramPacket(data, data.length);
                 socket.send(packet);
@@ -302,7 +306,7 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
                     returnJson.put("action", "move");
 //                    returnJson.put("acc", makeAccJson());
 //                    returnJson.put("gyro", makeGyroJson());
-                    returnJson.put("rotVec", makeRotVecJson());
+                    returnJson.put("rot", makeRotVecJson());
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
