@@ -32,6 +32,7 @@ import java.nio.charset.Charset;
 
 
 public class MainActivity extends ActionBarActivity implements SensorEventListener {
+    private static final long EXPO = 10000000L;
     InetAddress address;
     int port;
 
@@ -227,35 +228,15 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
     }
 
 
-    private JSONObject makeAccJson() throws JSONException {
-        JSONObject obj = new JSONObject();
+    private JSONArray compressVecJson(double[] vec) throws JSONException {
+        JSONArray compressedJson = new JSONArray();
+        for (int i = 0; i < vec.length; i++) {
+            compressedJson.put(i, Long.toString((long)(vec[i] * EXPO), 36));
+        }
+        return  compressedJson;
 
-        obj.put("x", accVec[0]);
-        obj.put("y", accVec[1]);
-        obj.put("z", accVec[2]);
-
-        return obj;
     }
 
-    private JSONObject makeGyroJson() throws JSONException {
-        JSONObject obj = new JSONObject();
-
-        obj.put("x", gyroVec[0]);
-        obj.put("y", gyroVec[1]);
-        obj.put("z", gyroVec[2]);
-
-        return obj;
-    }
-
-    private JSONObject makeRotVecJson() throws JSONException {
-        JSONObject obj = new JSONObject();
-
-        obj.put("x", rotVec[0]);
-        obj.put("y", rotVec[1]);
-        obj.put("z", rotVec[2]);
-
-        return obj;
-    }
 
     private JSONObject makeBtnStateJson() throws JSONException {
         JSONObject obj = new JSONObject();
@@ -266,21 +247,12 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
         return obj;
     }
 
-    private JSONObject makePosMovJson() throws JSONException {
-        JSONObject obj = new JSONObject();
-
-        obj.put("x", touchDelta[0]);
-        obj.put("y", touchDelta[1]);
-
-        return obj;
-    }
-
     private JSONObject makeActionJson(){
         JSONObject returnJson = new JSONObject();
 
         if(btnState[0] != 0) {
             try {
-                returnJson.put("action", "button");
+                returnJson.put("act", "button");
                 returnJson.put("btnState", makeBtnStateJson());
                 btnState[0] = 0;
                 return returnJson;
@@ -291,8 +263,8 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
 
         if (isTouch) {
             try {
-                returnJson.put("action", "touch");
-                returnJson.put("touchMov", makePosMovJson());
+                returnJson.put("act", "touch");
+                returnJson.put("touchMov", compressVecJson(touchDelta));
                 return returnJson;
             } catch (JSONException e) {
                 e.printStackTrace();
@@ -303,10 +275,10 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
         switch(action){
             case 1:
                 try {
-                    returnJson.put("action", "move");
-//                    returnJson.put("acc", makeAccJson());
-//                    returnJson.put("gyro", makeGyroJson());
-                    returnJson.put("rot", makeRotVecJson());
+                    returnJson.put("act", "move");
+//                    returnJson.put("acc", compressVecJson(accVec));
+//                    returnJson.put("gyro", compressVecJson(gyroVec));
+                    returnJson.put("rot", compressVecJson(rotVec));
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
