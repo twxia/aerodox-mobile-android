@@ -229,24 +229,24 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
             case Sensor.TYPE_GYROSCOPE:
                 handleGyro(event);
                 break;
-            case Sensor.TYPE_ROTATION_VECTOR:
-                rotVec[0] = event.values[0];
-                rotVec[1] = event.values[1];
-                rotVec[2] = event.values[2];
-                break;
+
             default:
                 Toast.makeText(getApplicationContext(), "No Sensor Responds", Toast.LENGTH_SHORT).show();
         }
-        s.post();
+
 
     }
 
     private float timestamp = 0;
     private static final float NS2S = 1.0f / 1000000000.0f;
-    private static final float EPSILON = 0.1f;
+    private static final float EPSILON = 0.08f; //should be combined with sensitivity in the future
     private void handleGyro(SensorEvent event) {
-        if (timestamp != 0) {
-            final float dT = (event.timestamp - timestamp) * NS2S;
+
+        float oldTimestamp = timestamp;
+        timestamp = event.timestamp;
+        if (oldTimestamp != 0) {
+            Log.d("TIMES", Float.toString(timestamp - oldTimestamp));
+            final float dT = (timestamp - oldTimestamp) * NS2S;
             // Axis of the rotation sample, not normalized yet.
             float axisX = event.values[0];
             float axisY = event.values[1];
@@ -256,15 +256,13 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
             float omegaMagnitude = FloatMath.sqrt(axisX * axisX + axisY * axisY + axisZ * axisZ);
 
             // Normalize the rotation vector if it's big enough to get the axis
-            if (omegaMagnitude > EPSILON) {
-                axisX /= omegaMagnitude;
-                axisY /= omegaMagnitude;
-                axisZ /= omegaMagnitude;
-            } else {
-                omegaMagnitude = 0;
+            if (omegaMagnitude <= EPSILON) {
+                return;
             }
 
-
+            axisX /= omegaMagnitude;
+            axisY /= omegaMagnitude;
+            axisZ /= omegaMagnitude;
 
             // Integrate around this axis with the angular speed by the timestep
             // in order to get a delta rotation from this sample over the timestep
@@ -275,8 +273,9 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
             gyroVec[0] = sinThetaOverTwo * axisX;
             gyroVec[1] = sinThetaOverTwo * axisY;
             gyroVec[2] = sinThetaOverTwo * axisZ;
+
+            s.post();
         }
-        timestamp = event.timestamp;
 
     }
 
@@ -331,7 +330,6 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
                     returnJson.put("act", "move");
 //                    returnJson.put("acc", compressVecJson(accVec));
                     returnJson.put("gyro", compressVecJson(gyroVec));
-//                    returnJson.put("rot", compressVecJson(rotVec));
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
