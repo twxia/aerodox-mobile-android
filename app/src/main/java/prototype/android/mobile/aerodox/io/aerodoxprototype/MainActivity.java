@@ -9,6 +9,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+import android.util.FloatMath;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -22,11 +23,15 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.Socket;
 import java.net.UnknownHostException;
 import java.nio.charset.Charset;
 
@@ -37,7 +42,8 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
     int port;
 
     SocketThread s = new SocketThread();
-    DatagramSocket socket;
+//    DatagramSocket socket;
+    Socket socket;
 
     int action = 1; // 1=move, 2=swipe
     int[] btnState = new int[]{0, 0}; // [0] 0=nothing, 1=left, 2=middle, 3=right , [1] ispress
@@ -163,24 +169,34 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
         private void connectSocket() {
 
             try {
-                socket = new DatagramSocket();
-                socket.connect(address, port);
+//                socket = new DatagramSocket();
+//                socket.connect(address, port);
+                socket = new Socket();
+                socket.setTcpNoDelay(true);
+                socket.setTrafficClass(0x12);
+                socket.setSendBufferSize(100);
+                socket.setPerformancePreferences(1, 2, 0);
+                socket.connect(new InetSocketAddress(address, port));
+                writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+                writer.write("[");
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
 
-        private void disconnectSocket() {
-                socket.close();
+        private void disconnectSocket() throws IOException {
+            writer.write("]");
+            socket.close();
         }
 
         private void writeAction(JSONObject jsonObject) {
             try {
 
-                byte[] data = jsonObject.toString().getBytes();
-                DatagramPacket packet = new DatagramPacket(data, data.length);
-                socket.send(packet);
-
+//                byte[] data = jsonObject.toString().getBytes();
+//                DatagramPacket packet = new DatagramPacket(data, data.length);
+//                socket.send(packet);
+            writer.write(jsonObject.toString() + ",");
+            writer.flush();
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -211,9 +227,7 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
                 accVec[2] = event.values[2];
                 break;
             case Sensor.TYPE_GYROSCOPE:
-                gyroVec[0] = event.values[0];
-                gyroVec[1] = event.values[1];
-                gyroVec[2] = event.values[2];
+                handleGyro(event);
                 break;
             case Sensor.TYPE_ROTATION_VECTOR:
                 rotVec[0] = event.values[0];
@@ -224,6 +238,45 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
                 Toast.makeText(getApplicationContext(), "No Sensor Responds", Toast.LENGTH_SHORT).show();
         }
         s.post();
+
+    }
+
+    private float timestamp = 0;
+    private static final float NS2S = 1.0f / 1000000000.0f;
+    private static final float EPSILON = 0.1f;
+    private void handleGyro(SensorEvent event) {
+        if (timestamp != 0) {
+            final float dT = (event.timestamp - timestamp) * NS2S;
+            // Axis of the rotation sample, not normalized yet.
+            float axisX = event.values[0];
+            float axisY = event.values[1];
+            float axisZ = event.values[2];
+
+            // Calculate the angular speed of the sample
+            float omegaMagnitude = FloatMath.sqrt(axisX * axisX + axisY * axisY + axisZ * axisZ);
+
+            // Normalize the rotation vector if it's big enough to get the axis
+            if (omegaMagnitude > EPSILON) {
+                axisX /= omegaMagnitude;
+                axisY /= omegaMagnitude;
+                axisZ /= omegaMagnitude;
+            } else {
+                omegaMagnitude = 0;
+            }
+
+
+
+            // Integrate around this axis with the angular speed by the timestep
+            // in order to get a delta rotation from this sample over the timestep
+            // We will convert this axis-angle representation of the delta rotation
+            // into a quaternion before turning it into the rotation matrix.
+            float thetaOverTwo = omegaMagnitude * dT / 2.0f;
+            float sinThetaOverTwo = FloatMath.sin(thetaOverTwo);
+            gyroVec[0] = sinThetaOverTwo * axisX;
+            gyroVec[1] = sinThetaOverTwo * axisY;
+            gyroVec[2] = sinThetaOverTwo * axisZ;
+        }
+        timestamp = event.timestamp;
 
     }
 
@@ -277,8 +330,8 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
                 try {
                     returnJson.put("act", "move");
 //                    returnJson.put("acc", compressVecJson(accVec));
-//                    returnJson.put("gyro", compressVecJson(gyroVec));
-                    returnJson.put("rot", compressVecJson(rotVec));
+                    returnJson.put("gyro", compressVecJson(gyroVec));
+//                    returnJson.put("rot", compressVecJson(rotVec));
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
@@ -314,9 +367,9 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
     protected void onResume() {
         super.onResume();
 
-        //sensorMgr.registerListener(this, acc, SensorManager.SENSOR_DELAY_GAME);
-        //sensorMgr.registerListener(this, gyro, SensorManager.SENSOR_DELAY_GAME);
-        sensorMgr.registerListener(this, rot, SensorManager.SENSOR_DELAY_GAME);
+//        sensorMgr.registerListener(this, acc, SensorManager.SENSOR_DELAY_GAME);
+        sensorMgr.registerListener(this, gyro, SensorManager.SENSOR_DELAY_GAME);
+//        sensorMgr.registerListener(this, rot, SensorManager.SENSOR_DELAY_GAME);
     }
 
     /*@Override
