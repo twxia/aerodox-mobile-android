@@ -42,8 +42,8 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
     int port;
 
     SocketThread s = new SocketThread();
-//    DatagramSocket socket;
-    Socket socket;
+    DatagramSocket socket;
+//    Socket socket;
 
     int action = 1; // 1=move, 2=swipe
     int[] btnState = new int[]{0, 0}; // [0] 0=nothing, 1=left, 2=middle, 3=right , [1] ispress
@@ -141,7 +141,7 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
 
     private class SocketThread extends Thread {
 
-        Writer writer;
+//        Writer writer;
         Handler mHandler;
 
         Runnable launch = new Runnable() {
@@ -169,34 +169,35 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
         private void connectSocket() {
 
             try {
-//                socket = new DatagramSocket();
-//                socket.connect(address, port);
-                socket = new Socket();
-                socket.setTcpNoDelay(true);
-                socket.setTrafficClass(0x12);
-                socket.setSendBufferSize(100);
-                socket.setPerformancePreferences(1, 2, 0);
-                socket.connect(new InetSocketAddress(address, port));
-                writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
-                writer.write("[");
+                socket = new DatagramSocket();
+                socket.setSendBufferSize(120);
+                socket.connect(address, port);
+
+//                socket = new Socket();
+//                socket.setTcpNoDelay(true);
+//                socket.setTrafficClass(0x12);
+//                socket.connect(new InetSocketAddress(address, port));
+//                writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+//                writer.write("[");
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
 
         private void disconnectSocket() throws IOException {
-            writer.write("]");
+//            writer.write("]");
             socket.close();
         }
 
         private void writeAction(JSONObject jsonObject) {
             try {
 
-//                byte[] data = jsonObject.toString().getBytes();
-//                DatagramPacket packet = new DatagramPacket(data, data.length);
-//                socket.send(packet);
-            writer.write(jsonObject.toString() + ",");
-            writer.flush();
+            byte[] data = jsonObject.toString().getBytes();
+            DatagramPacket packet = new DatagramPacket(data, data.length);
+            socket.send(packet);
+
+//            writer.write(jsonObject.toString() + ",");
+//            writer.flush();
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -276,7 +277,6 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
 
             s.post();
         }
-
     }
 
 
