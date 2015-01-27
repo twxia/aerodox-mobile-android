@@ -239,13 +239,13 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
 
     private float timestamp = 0;
     private static final float NS2S = 1.0f / 1000000000.0f;
-    private static final float EPSILON = 0.08f; //should be combined with sensitivity in the future
+    private static final float EPSILON = 0.0000001f;
     private void handleGyro(SensorEvent event) {
 
         float oldTimestamp = timestamp;
         timestamp = event.timestamp;
         if (oldTimestamp != 0) {
-            Log.d("TIMES", Float.toString(timestamp - oldTimestamp));
+
             final float dT = (timestamp - oldTimestamp) * NS2S;
             // Axis of the rotation sample, not normalized yet.
             float axisX = event.values[0];
@@ -367,7 +367,6 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
 
 //        sensorMgr.registerListener(this, acc, SensorManager.SENSOR_DELAY_GAME);
         sensorMgr.registerListener(this, gyro, SensorManager.SENSOR_DELAY_GAME);
-//        sensorMgr.registerListener(this, rot, SensorManager.SENSOR_DELAY_GAME);
     }
 
     /*@Override
