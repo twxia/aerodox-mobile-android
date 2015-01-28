@@ -77,8 +77,6 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
         }
 
 
-        Log.i("connection", "connect to ip: " + ip);
-
         sensorMgr = (SensorManager) getSystemService(SENSOR_SERVICE);
         acc = sensorMgr.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
         gyro = sensorMgr.getDefaultSensor(Sensor.TYPE_GYROSCOPE);

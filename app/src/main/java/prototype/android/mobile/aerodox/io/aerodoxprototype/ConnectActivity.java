@@ -122,9 +122,9 @@ public class ConnectActivity extends Activity {
     }
 
     public List<String> checkLAN(String ip){
-        int timeout=300;
+        int timeout=350;
 
-        final ExecutorService es = Executors.newFixedThreadPool(25);
+        final ExecutorService es = Executors.newFixedThreadPool(20);
 
         List<String> availableIPs = new ArrayList<>();
 
@@ -138,21 +138,29 @@ public class ConnectActivity extends Activity {
                 subnet += "." + sub[i];
         }
 
+        final List<Future<Boolean>> futures = new ArrayList<>();
         for (int i=1;i<255;i++){
             String host = subnet + "." + i;
+            futures.add(portIsOpen(es, host, port, timeout));
+        }
+        es.shutdown();
 
-            Future<Boolean> yes = portIsOpen(es, host, port, timeout);
-            //System.out.println("connect : " + host);
+        int i = 0;
+        for (final Future<Boolean> f : futures) {
+            i++;
             try {
-                if(yes.get())
-                    availableIPs.add(host);
+                System.out.println(f.get().toString() + ",ip: "+subnet+"."+i);
+                if (f.get()) {
+
+                    availableIPs.add(subnet + "." + futures.indexOf(f));
+                }
             } catch (InterruptedException e) {
                 e.printStackTrace();
             } catch (ExecutionException e) {
                 e.printStackTrace();
             }
         }
-        es.shutdown();
+
 
         return availableIPs;
     }
@@ -162,6 +170,7 @@ public class ConnectActivity extends Activity {
             @Override public Boolean call() {
                 try {
                     Socket socket = new Socket();
+                    System.out.println("connect : " + ip);
                     socket.connect(new InetSocketAddress(ip, port), timeout);
                     socket.close();
                     return true;
