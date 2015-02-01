@@ -48,13 +48,12 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
     int action = 1; // 1=move, 2=swipe
     int[] btnState = new int[]{0, 0}; // [0] 0=nothing, 1=left, 2=middle, 3=right , [1] ispress
 
-    double[] accVec = new double[]{0, 0, 0};
     double[] gyroVec = new double[]{0, 0, 0};
     double[] rotVec = new double[]{0, 0, 0};
     double[] touchStart = new double[]{0, 0};
     double[] touchDelta = new double[]{0, 0};
     SensorManager sensorMgr;
-    Sensor acc, gyro, rot;
+    Sensor gyro, rot;
 
     Button btnLeft, btnRight;
 
@@ -78,7 +77,6 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
 
 
         sensorMgr = (SensorManager) getSystemService(SENSOR_SERVICE);
-        acc = sensorMgr.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
         gyro = sensorMgr.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
         rot = sensorMgr.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
 
@@ -220,13 +218,9 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
     @Override
     public void onSensorChanged(SensorEvent event) {
         switch (event.sensor.getType()){
-            case Sensor.TYPE_LINEAR_ACCELERATION:
-                accVec[0] = event.values[0];
-                accVec[1] = event.values[1];
-                accVec[2] = event.values[2];
-                break;
-            case Sensor.TYPE_GYROSCOPE:
-                handleGyro(event);
+
+            case Sensor.TYPE_ROTATION_VECTOR:
+                handleRotVec(event);
                 break;
 
             default:
@@ -236,45 +230,11 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
 
     }
 
-    private float timestamp = 0;
-    private static final float NS2S = 1.0f / 1000000000.0f;
-    private static final float EPSILON = 0.0000001f;
-    private void handleGyro(SensorEvent event) {
-
-        float oldTimestamp = timestamp;
-        timestamp = event.timestamp;
-        if (oldTimestamp != 0) {
-
-            final float dT = (timestamp - oldTimestamp) * NS2S;
-            // Axis of the rotation sample, not normalized yet.
-            float axisX = event.values[0];
-            float axisY = event.values[1];
-            float axisZ = event.values[2];
-
-            // Calculate the angular speed of the sample
-            float omegaMagnitude = FloatMath.sqrt(axisX * axisX + axisY * axisY + axisZ * axisZ);
-
-            // Normalize the rotation vector if it's big enough to get the axis
-            if (omegaMagnitude <= EPSILON) {
-                return;
-            }
-
-            axisX /= omegaMagnitude;
-            axisY /= omegaMagnitude;
-            axisZ /= omegaMagnitude;
-
-            // Integrate around this axis with the angular speed by the timestep
-            // in order to get a delta rotation from this sample over the timestep
-            // We will convert this axis-angle representation of the delta rotation
-            // into a quaternion before turning it into the rotation matrix.
-            float thetaOverTwo = omegaMagnitude * dT / 2.0f;
-            float sinThetaOverTwo = FloatMath.sin(thetaOverTwo);
-            gyroVec[0] = sinThetaOverTwo * axisX;
-            gyroVec[1] = sinThetaOverTwo * axisY;
-            gyroVec[2] = sinThetaOverTwo * axisZ;
-
-            s.post();
+    private void handleRotVec(SensorEvent event) {
+        for (int i = 0; i < rotVec.length; i++) {
+            rotVec[i] = event.values[i];
         }
+        s.post();
     }
 
 
@@ -326,8 +286,7 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
             case 1:
                 try {
                     returnJson.put("act", "move");
-//                    returnJson.put("acc", compressVecJson(accVec));
-                    returnJson.put("gyro", compressVecJson(gyroVec));
+                    returnJson.put("rot", compressVecJson(rotVec));
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
@@ -363,8 +322,7 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
     protected void onResume() {
         super.onResume();
 
-//        sensorMgr.registerListener(this, acc, SensorManager.SENSOR_DELAY_GAME);
-        sensorMgr.registerListener(this, gyro, SensorManager.SENSOR_DELAY_GAME);
+        sensorMgr.registerListener(this, rot, SensorManager.SENSOR_DELAY_GAME);
     }
 
     /*@Override
