@@ -62,29 +62,29 @@ public class ConnectActivity extends Activity {
         ipList = (ListView) findViewById(R.id.ipList);
         ipLoadingLauout = (LinearLayout) findViewById(R.id.ipLoadingLauout);
 
-        final List<String> availableIP = new ArrayList<>();
+        final List<String> pingableIPs = new ArrayList<>();
 
         ipList.setOnItemClickListener(new ListView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Intent intent = new Intent();
                 intent.setClass(ConnectActivity.this, MainActivity.class);
-                intent.putExtra("ip", availableIP.get(position));
+                intent.putExtra("ip", pingableIPs.get(position));
                 startActivity(intent);
             }
         });
 
         final Handler mHandler = new Handler() {
             public void handleMessage(Message msg) {
-                switch (msg.what) {
-                    case 1:
-                        ArrayAdapter<String> listAdapter = new ArrayAdapter<>(
-                                ConnectActivity.this, android.R.layout.simple_list_item_1, availableIP);
+                for(String ip : (ArrayList<String>)msg.obj)
+                    pingableIPs.add(ip);
 
-                        ipLoadingLauout.setVisibility(View.INVISIBLE);
-                        ipList.setAdapter(listAdapter);
-                        break;
-                }
+                    ArrayAdapter<String> listAdapter = new ArrayAdapter<String>(
+                            ConnectActivity.this, android.R.layout.simple_list_item_1, pingableIPs);
+
+                    ipLoadingLauout.setVisibility(View.INVISIBLE);
+                    ipList.setAdapter(listAdapter);
+
                 super.handleMessage(msg);
             }
         };

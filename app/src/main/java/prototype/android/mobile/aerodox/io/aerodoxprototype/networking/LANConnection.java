@@ -25,7 +25,7 @@ import java.util.concurrent.Future;
 public class LANConnection implements Runnable {
 
     private Handler mHandler;
-    private List<String> availableIP;
+    private List<String> availableIP = new ArrayList<>();
 
     public LANConnection(Handler mHandler) {
         this.mHandler = mHandler;
@@ -44,6 +44,7 @@ public class LANConnection implements Runnable {
 
         Message msg = new Message();
         msg.what = 1;
+        msg.obj = this.availableIP;
 
         this.mHandler.sendMessage(msg);
     }
