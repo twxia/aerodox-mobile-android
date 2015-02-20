@@ -81,7 +81,6 @@ public class ConnectActivity extends Activity {
             public void onClick(View v) {
                 Intent intent = new Intent();
                 intent.setClass(ConnectActivity.this, MainActivity.class);
-                intent.putExtra("ip", getInputIp());
                 intent.putExtra("port", portUDP);
                 startActivity(intent);
 
@@ -121,16 +120,6 @@ public class ConnectActivity extends Activity {
         }).start();
     }
 
-    private String getInputIp(){
-        final EditText ipSlot1 = (EditText) findViewById(R.id.ipSlot1);
-        final EditText ipSlot2 = (EditText) findViewById(R.id.ipSlot2);
-        final EditText ipSlot3 = (EditText) findViewById(R.id.ipSlot3);
-        final EditText ipSlot4 = (EditText) findViewById(R.id.ipSlot4);
-
-        return ipSlot1.getText().toString() + "." + ipSlot2.getText().toString() + "." +
-                ipSlot3.getText().toString() + "." + ipSlot4.getText().toString();
-    }
-
     public List<String> checkLAN(String ip){
         int timeout=350;
 
@@ -149,21 +138,20 @@ public class ConnectActivity extends Activity {
         }
 
         final List<Future<Boolean>> futures = new ArrayList<>();
+
         for (int i=1;i<255;i++){
             String host = subnet + "." + i;
             futures.add(portIsOpen(es, host, portTCP, timeout));
         }
         es.shutdown();
 
-        int i = 0;
-        for (final Future<Boolean> f : futures) {
-            i++;
-            try {
-                System.out.println(f.get().toString() + ",ip: "+subnet+"."+i);
-                if (f.get()) {
 
-                    availableIPs.add(subnet + "." + futures.indexOf(f));
-                }
+        for (final Future<Boolean> f : futures) {
+
+            try {
+                if (f.get())
+                    availableIPs.add(subnet + "." + (futures.indexOf(f) + 1));
+
             } catch (InterruptedException e) {
                 e.printStackTrace();
             } catch (ExecutionException e) {
