@@ -11,15 +11,20 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.NetworkInterface;
+import java.net.PortUnreachableException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketAddress;
@@ -39,9 +44,11 @@ import java.util.concurrent.Future;
  */
 public class ConnectActivity extends Activity {
 
-    final int port = 1810;
+    final int portTCP = 8101;
+    final int portUDP = 1810;
 
     ListView ipList;
+    LinearLayout ipLoadingLauout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,6 +61,7 @@ public class ConnectActivity extends Activity {
         logo.setImageResource(R.drawable.logo);
 
         ipList = (ListView) findViewById(R.id.ipList);
+        ipLoadingLauout = (LinearLayout) findViewById(R.id.ipLoadingLauout);
 
         final List<String> availableIP = new ArrayList<>();
 
@@ -63,7 +71,7 @@ public class ConnectActivity extends Activity {
                 Intent intent = new Intent();
                 intent.setClass(ConnectActivity.this, MainActivity.class);
                 intent.putExtra("ip", availableIP.get(position));
-                intent.putExtra("port", port);
+                intent.putExtra("port", portUDP);
                 startActivity(intent);
             }
         });
@@ -74,7 +82,7 @@ public class ConnectActivity extends Activity {
                 Intent intent = new Intent();
                 intent.setClass(ConnectActivity.this, MainActivity.class);
                 intent.putExtra("ip", getInputIp());
-                intent.putExtra("port", port);
+                intent.putExtra("port", portUDP);
                 startActivity(intent);
 
             }
@@ -86,6 +94,7 @@ public class ConnectActivity extends Activity {
                     case 1:
                         ArrayAdapter<String> listAdapter = new ArrayAdapter<String>(ConnectActivity.this, android.R.layout.simple_list_item_1, availableIP);
                         ipList.setAdapter(listAdapter);
+                        ipLoadingLauout.setVisibility(View.INVISIBLE);
                         break;
                 }
                 super.handleMessage(msg);
@@ -107,6 +116,7 @@ public class ConnectActivity extends Activity {
                 Message msg = new Message();
                 msg.what = 1;
                 myHandler.sendMessage(msg);
+
             }
         }).start();
     }
@@ -124,7 +134,7 @@ public class ConnectActivity extends Activity {
     public List<String> checkLAN(String ip){
         int timeout=350;
 
-        final ExecutorService es = Executors.newFixedThreadPool(20);
+        final ExecutorService es = Executors.newFixedThreadPool(30);
 
         List<String> availableIPs = new ArrayList<>();
 
@@ -141,7 +151,7 @@ public class ConnectActivity extends Activity {
         final List<Future<Boolean>> futures = new ArrayList<>();
         for (int i=1;i<255;i++){
             String host = subnet + "." + i;
-            futures.add(portIsOpen(es, host, port, timeout));
+            futures.add(portIsOpen(es, host, portTCP, timeout));
         }
         es.shutdown();
 
@@ -160,7 +170,6 @@ public class ConnectActivity extends Activity {
                 e.printStackTrace();
             }
         }
-
 
         return availableIPs;
     }
