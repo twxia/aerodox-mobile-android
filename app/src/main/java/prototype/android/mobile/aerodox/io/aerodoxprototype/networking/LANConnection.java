@@ -83,7 +83,7 @@ public class LANConnection implements Runnable {
         this.mHandler.sendMessage(msg);
     }
 
-    private List<String> getLANIPs(String localIP){
+    private static List<String> getLANIPs(String localIP){
         List<String> IPs = new ArrayList<>();
         String[] sub = localIP.split("\\.");
         String host = "";
@@ -102,7 +102,7 @@ public class LANConnection implements Runnable {
         return IPs;
     }
 
-    private Callable<HostInfo> makeHostChecker(final String ip, final int port) {
+    private static Callable<HostInfo> makeHostChecker(final String ip, final int port) {
         return new Callable<HostInfo>() {
             @Override public HostInfo call() {
                 try {
