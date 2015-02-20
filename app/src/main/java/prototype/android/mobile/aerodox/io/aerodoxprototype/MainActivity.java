@@ -28,6 +28,8 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
+import prototype.android.mobile.aerodox.io.aerodoxprototype.networking.Config;
+
 
 public class MainActivity extends ActionBarActivity implements SensorEventListener {
     private static final long EXPO = 10000000L;
@@ -162,7 +164,7 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
             try {
                 socket = new DatagramSocket();
                 socket.setSendBufferSize(120);
-                socket.connect(address, port);
+                socket.connect(address, Config.UDP_PORT);
 
 /*                socket = new Socket();
                 socket.setTcpNoDelay(true);

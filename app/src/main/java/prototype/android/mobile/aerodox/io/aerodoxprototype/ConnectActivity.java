@@ -39,13 +39,12 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+import prototype.android.mobile.aerodox.io.aerodoxprototype.networking.LANConnection;
+
 /**
  * Created by xia on 1/18/15.
  */
 public class ConnectActivity extends Activity {
-
-    final int portTCP = 8101;
-    final int portUDP = 1810;
 
     ListView ipList;
     LinearLayout ipLoadingLauout;
@@ -71,136 +70,26 @@ public class ConnectActivity extends Activity {
                 Intent intent = new Intent();
                 intent.setClass(ConnectActivity.this, MainActivity.class);
                 intent.putExtra("ip", availableIP.get(position));
-                intent.putExtra("port", portUDP);
                 startActivity(intent);
             }
         });
 
-        btnConnect.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent();
-                intent.setClass(ConnectActivity.this, MainActivity.class);
-                intent.putExtra("port", portUDP);
-                startActivity(intent);
-
-            }
-        });
-
-        final Handler myHandler = new Handler() {
+        final Handler mHandler = new Handler() {
             public void handleMessage(Message msg) {
                 switch (msg.what) {
                     case 1:
-                        ArrayAdapter<String> listAdapter = new ArrayAdapter<String>(ConnectActivity.this, android.R.layout.simple_list_item_1, availableIP);
-                        ipList.setAdapter(listAdapter);
+                        ArrayAdapter<String> listAdapter = new ArrayAdapter<>(
+                                ConnectActivity.this, android.R.layout.simple_list_item_1, availableIP);
+
                         ipLoadingLauout.setVisibility(View.INVISIBLE);
+                        ipList.setAdapter(listAdapter);
                         break;
                 }
                 super.handleMessage(msg);
             }
         };
 
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                List<String> IPs = getActiveIPs();
-
-                for(String ip : IPs){
-                    List<String> LANIPs = checkLAN(ip);
-                    for(String LANIP : LANIPs){
-                        availableIP.add(LANIP);
-                    }
-                }
-                System.out.println(availableIP.toString());
-                Message msg = new Message();
-                msg.what = 1;
-                myHandler.sendMessage(msg);
-
-            }
-        }).start();
-    }
-
-    public List<String> checkLAN(String ip){
-        int timeout=350;
-
-        final ExecutorService es = Executors.newFixedThreadPool(30);
-
-        List<String> availableIPs = new ArrayList<>();
-
-        String subnet = "";
-        String[] sub = ip.split("\\.");
-
-        for(int i=0; i< sub.length - 1; i++){
-            if(i == 0)
-                subnet = sub[i];
-            else
-                subnet += "." + sub[i];
-        }
-
-        final List<Future<Boolean>> futures = new ArrayList<>();
-
-        for (int i=1;i<255;i++){
-            String host = subnet + "." + i;
-            futures.add(portIsOpen(es, host, portTCP, timeout));
-        }
-        es.shutdown();
-
-
-        for (final Future<Boolean> f : futures) {
-
-            try {
-                if (f.get())
-                    availableIPs.add(subnet + "." + (futures.indexOf(f) + 1));
-
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            } catch (ExecutionException e) {
-                e.printStackTrace();
-            }
-        }
-
-        return availableIPs;
-    }
-
-    public Future<Boolean> portIsOpen(final ExecutorService es, final String ip, final int port, final int timeout) {
-        return es.submit(new Callable<Boolean>() {
-            @Override public Boolean call() {
-                try {
-                    Socket socket = new Socket();
-                    System.out.println("connect : " + ip);
-                    socket.connect(new InetSocketAddress(ip, port), timeout);
-                    socket.close();
-                    return true;
-                } catch (Exception ex) {
-                    return false;
-                }
-            }
-        });
-    }
-
-    private List<String> getActiveIPs() {
-        List<String> result = new LinkedList<>();
-        try {
-            Enumeration<NetworkInterface> netInterfaces = NetworkInterface.getNetworkInterfaces();
-            NetworkInterface netInterface;
-            for (; netInterfaces.hasMoreElements();) {
-                netInterface = netInterfaces.nextElement();
-                if (!netInterface.isLoopback() && !netInterface.isVirtual() && netInterface.isUp()) {
-                    Enumeration<InetAddress> addresses = netInterface.getInetAddresses();
-                    InetAddress address;
-                    for (; addresses.hasMoreElements();) {
-                        address = addresses.nextElement();
-                        if (address instanceof Inet4Address) {
-                            result.add(address.getHostAddress());
-                        }
-                    }
-                }
-            }
-        } catch (SocketException e) {
-            e.printStackTrace();
-        }
-
-        return result;
+        new Thread(new LANConnection(mHandler)).start();
     }
 
 }
