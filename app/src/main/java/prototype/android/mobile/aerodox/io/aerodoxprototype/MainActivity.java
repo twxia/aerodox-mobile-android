@@ -235,18 +235,15 @@ public class MainActivity extends ActionBarActivity implements SensorEventListen
         s.post();
     }
 
-    private static final float NS2S = 1.0f / 1000000000.0f;
-    private float timestamp = 0;
+    private static final float S2REAL_VOL = 0.02f;
 
     private void handleGyro(SensorEvent event) {
-        if (timestamp != 0) {
-            final float dT = (event.timestamp - timestamp) * NS2S;
 
-            gyroVec[0] = dT * event.values[0];
-            gyroVec[1] = dT * event.values[1];
-            gyroVec[2] = dT * event.values[2];
-        }
-        timestamp = event.timestamp;
+
+
+        gyroVec[0] = S2REAL_VOL * event.values[0];
+        gyroVec[1] = S2REAL_VOL * event.values[1];
+        gyroVec[2] = S2REAL_VOL * event.values[2];
         s.post();
     }
 
