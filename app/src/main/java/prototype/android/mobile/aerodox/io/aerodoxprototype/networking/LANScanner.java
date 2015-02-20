@@ -33,16 +33,16 @@ import java.util.concurrent.Future;
 /**
  * Created by xia on 2/20/15.
  */
-public class LANConnection implements Runnable {
+public class LANScanner {
 
     private Handler mHandler;
 
-    public LANConnection(Handler mHandler) {
-        this.mHandler = mHandler;
+    public LANScanner(Handler hostMessageReciever) {
+        this.mHandler = hostMessageReciever;
     }
 
-    @Override
-    public void run() {
+
+    public void scan() {
         List<String> deviceIPs = getActiveIPs();
 
         for(String deviceIP : deviceIPs){

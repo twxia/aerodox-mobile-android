@@ -25,7 +25,8 @@
             android:layout_marginTop="35dp"
             android:layout_margin="35dp" />
 
-        <RelativeLayout
+        <LinearLayout
+            android:orientation="vertical"
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
             android:layout_below="@+id/imgLogo"
@@ -40,20 +41,21 @@
                 android:layout_centerHorizontal="true" />
 
             <ListView
-                android:layout_width="135dp"
-                android:layout_height="wrap_content"
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent"
                 android:id="@+id/hostList"
                 android:layout_below="@+id/textView6"
                 android:layout_alignLeft="@+id/textView6"
                 android:layout_alignStart="@+id/textView6"
                 android:layout_alignRight="@+id/textView6"
                 android:layout_alignEnd="@+id/textView6"
-                android:layout_marginTop="10dp" />
+                android:layout_marginTop="10dp"
+                android:layout_weight="1" />
 
             <LinearLayout
                 android:orientation="vertical"
                 android:layout_width="fill_parent"
-                android:layout_height="50dp"
+                android:layout_height="wrap_content"
                 android:weightSum="1"
                 android:layout_centerVertical="true"
                 android:layout_alignParentLeft="true"
@@ -81,7 +83,7 @@
                     android:layout_gravity="center_horizontal" />
             </LinearLayout>
 
-        </RelativeLayout>
+        </LinearLayout>
 
         <Button
             android:layout_width="match_parent"
