@@ -42,7 +42,7 @@
             <ListView
                 android:layout_width="135dp"
                 android:layout_height="wrap_content"
-                android:id="@+id/ipList"
+                android:id="@+id/hostList"
                 android:layout_below="@+id/textView6"
                 android:layout_alignLeft="@+id/textView6"
                 android:layout_alignStart="@+id/textView6"
@@ -58,7 +58,7 @@
                 android:layout_centerVertical="true"
                 android:layout_alignParentLeft="true"
                 android:layout_alignParentStart="true"
-                android:id="@+id/ipLoadingLauout">
+                android:id="@+id/ipLoadingLayout">
 
                 <ProgressBar
                     style="?android:attr/progressBarStyleSmall"

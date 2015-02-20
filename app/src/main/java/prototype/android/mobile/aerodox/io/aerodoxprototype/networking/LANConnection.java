@@ -1,8 +1,19 @@
 package prototype.android.mobile.aerodox.io.aerodoxprototype.networking;
 
+import android.annotation.TargetApi;
+import android.os.Build;
 import android.os.Handler;
 import android.os.Message;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -25,7 +36,6 @@ import java.util.concurrent.Future;
 public class LANConnection implements Runnable {
 
     private Handler mHandler;
-    private List<String> availableIP = new ArrayList<>();
 
     public LANConnection(Handler mHandler) {
         this.mHandler = mHandler;
@@ -36,47 +46,46 @@ public class LANConnection implements Runnable {
         List<String> deviceIPs = getActiveIPs();
 
         for(String deviceIP : deviceIPs){
-            List<String> pingableIPs = checkPingable(deviceIP);
-            for(String pingableIP : pingableIPs){
-                this.availableIP.add(pingableIP);
-            }
+            scanLAN(deviceIP);
+        }
+    }
+
+    private void scanLAN(String IP){
+        ExecutorService executor = Executors.newFixedThreadPool(35);
+        List<Future<HostInfo>> futures = new ArrayList<>();
+        Future<HostInfo> future;
+
+        List<String> LANIPs = getLANIPs(IP);
+        for (String LANIP : LANIPs){
+            future = executor.submit(makeHostChecker(LANIP, Config.TCP_PORT));
+            futures.add(future);
         }
 
+        executor.shutdown();
+
+        for (Future<HostInfo> f : futures) {
+            try {
+                HostInfo hostInfo = f.get();
+                if (hostInfo != null)
+                    sendAvaliableHostMessage(hostInfo);
+
+            } catch (ExecutionException | InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    //send the scanning result immediately, leveraging concurrency
+    private void sendAvaliableHostMessage(HostInfo hostInfo) {
         Message msg = new Message();
-        msg.what = 1;
-        msg.obj = this.availableIP;
+        msg.obj = hostInfo;
 
         this.mHandler.sendMessage(msg);
     }
 
-    private List<String> checkPingable(String IP){
-        ExecutorService es = Executors.newFixedThreadPool(35);
-        List<Future<Boolean>> futures = new ArrayList<>();
-
-        List<String> availableIPs = new ArrayList<>();
-
-        List<String> LANIPs = getLAN(IP);
-        for (String LANIP : LANIPs){
-            futures.add(portIsOpen(es, LANIP, Config.TCP_PORT, Config.TIMEOUT));
-        }
-        es.shutdown();
-
-        for (final Future<Boolean> f : futures) {
-            try {
-                if (f.get()) availableIPs.add(LANIPs.get(futures.indexOf(f)));
-            } catch (ExecutionException e) {
-                e.printStackTrace();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-
-        return availableIPs;
-    }
-
-    private List<String> getLAN(String IP){
+    private List<String> getLANIPs(String localIP){
         List<String> IPs = new ArrayList<>();
-        String[] sub = IP.split("\\.");
+        String[] sub = localIP.split("\\.");
         String host = "";
 
         for(int i=0; i< sub.length - 1; i++){
@@ -93,32 +102,36 @@ public class LANConnection implements Runnable {
         return IPs;
     }
 
-    private Future<Boolean> portIsOpen(final ExecutorService es, final String ip, final int port, final int timeout) {
-        return es.submit(new Callable<Boolean>() {
-            @Override public Boolean call() {
+    private Callable<HostInfo> makeHostChecker(final String ip, final int port) {
+        return new Callable<HostInfo>() {
+            @Override public HostInfo call() {
                 try {
                     Socket socket = new Socket();
-                    socket.connect(new InetSocketAddress(ip, port), timeout);
-                    socket.close();
-                    return true;
+                    socket.connect(new InetSocketAddress(ip, port), Config.TIMEOUT);
+                    String host = scanHost(socket);
+
+                    return new HostInfo(host, ip);
                 } catch (Exception ex) {
-                    return false;
+                    return null;
                 }
             }
-        });
+        };
     }
 
-    private List<String> getActiveIPs() {
+    private static List<String> getActiveIPs() {
         List<String> result = new LinkedList<>();
         try {
             Enumeration<NetworkInterface> netInterfaces = NetworkInterface.getNetworkInterfaces();
             NetworkInterface netInterface;
             for (; netInterfaces.hasMoreElements();) {
+
                 netInterface = netInterfaces.nextElement();
                 if (!netInterface.isLoopback() && !netInterface.isVirtual() && netInterface.isUp()) {
+
                     Enumeration<InetAddress> addresses = netInterface.getInetAddresses();
                     InetAddress address;
                     for (; addresses.hasMoreElements();) {
+
                         address = addresses.nextElement();
                         if (address instanceof Inet4Address) {
                             result.add(address.getHostAddress());
@@ -132,4 +145,48 @@ public class LANConnection implements Runnable {
 
         return result;
     }
+
+    @TargetApi(Build.VERSION_CODES.KITKAT)
+    private static String scanHost(Socket socket) {
+        String host = null;
+        try (Writer writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+             BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
+            writer.write("[");
+            writer.write(makeScanJson().toString());
+            writer.flush();
+
+            host = handleScanResponse(reader.readLine());
+            writer.write("]");
+            writer.flush();
+            socket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return host;
+    }
+
+    private static String handleScanResponse(String s) {
+        String host = null;
+        try {
+            JSONObject response = new JSONObject(s);
+            if (response.getString("rsp").equals("scan")) {
+                host = response.getString("host");
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return host;
+    }
+
+    private static JSONObject makeScanJson() {
+        JSONObject action = new JSONObject();
+        try {
+            action.put("act", "scan");
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return action;
+    }
+
 }
