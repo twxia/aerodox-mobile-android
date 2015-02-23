@@ -63,6 +63,12 @@ public class ControlActivity extends Activity implements SensorEventListener {
         public boolean onTouch(View v, MotionEvent event) {
             switch (event.getAction()) {
                 case MotionEvent.ACTION_DOWN:
+                    if(Calendar.getInstance().getTimeInMillis() - startClickTime < Config.MAX_CLICK_DURATION * 1.5) {
+                        ActionFormat.setAction(Action.BUTTON);
+                        ActionFormat.setBtnState(ButtonKey.LEFT, true);
+                        launcher.launch();
+                    }
+
                     ActionFormat.setTouchStart(new double[]{event.getX(), event.getY()});
 
                     startClickTime = Calendar.getInstance().getTimeInMillis();
@@ -80,9 +86,9 @@ public class ControlActivity extends Activity implements SensorEventListener {
 
                         ActionFormat.setBtnState(ButtonKey.LEFT, true);
                         launcher.launch();
-                        ActionFormat.setBtnState(ButtonKey.LEFT, false);
-                        launcher.launch();
                     }
+                    ActionFormat.setBtnState(ButtonKey.LEFT, false);
+                    launcher.launch();
             }
 
             return true;
