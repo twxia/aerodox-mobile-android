@@ -71,7 +71,7 @@ public class ControlActivity extends Activity implements SensorEventListener {
 
                     ActionFormat.setTouchStart(new double[]{event.getX(), event.getY()});
 
-                    startClickTime = Calendar.getInstance().getTimeInMillis();
+                    startClickTime = event.getEventTime();
 
                     ActionFormat.setAction(Action.SWIPE);
                     break;
@@ -81,7 +81,7 @@ public class ControlActivity extends Activity implements SensorEventListener {
 
                     break;
                 case MotionEvent.ACTION_UP:
-                    if(Calendar.getInstance().getTimeInMillis() - startClickTime < Config.MAX_CLICK_DURATION) {
+                    if(event.getEventTime() - startClickTime < Config.MAX_CLICK_DURATION) {
                         ActionFormat.setAction(Action.BUTTON);
 
                         ActionFormat.setBtnState(ButtonKey.LEFT, true);
@@ -97,8 +97,8 @@ public class ControlActivity extends Activity implements SensorEventListener {
 
     private void processMoving(double x, double y) {
         double[] delta = ActionFormat.getTouchDelta();
-        if(delta[0] - x > Config.MOVE_THRESHOLD ||
-                delta[1] - y > Config.MOVE_THRESHOLD)
+        double distanceSquare = delta[0] * delta[0] + delta[1] * delta[1];
+        if(distanceSquare > Config.MOVE_THRESHOLD)
             ActionFormat.setAction(Action.TOUCH);
         else
             ActionFormat.setAction(Action.SWIPE);

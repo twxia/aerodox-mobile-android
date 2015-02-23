@@ -85,15 +85,7 @@ public class LANScanner {
 
     private static List<String> getLANIPs(String localIP){
         List<String> IPs = new ArrayList<>();
-        String[] sub = localIP.split("\\.");
-        String host = "";
-
-        for(int i=0; i< sub.length - 1; i++){
-            if(i == 0)
-                host = sub[i];
-            else
-                host += "." + sub[i];
-        }
+        String host = localIP.substring(0, localIP.lastIndexOf('.') + 1);
 
         for (int i=1; i<255; i++){
             IPs.add(host + "." + i);

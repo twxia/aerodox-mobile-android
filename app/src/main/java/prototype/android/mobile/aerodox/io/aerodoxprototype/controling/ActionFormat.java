@@ -78,22 +78,18 @@ public class ActionFormat {
 
     public static JSONObject makeActionJson() throws JSONException {
         JSONObject returnJson = new JSONObject();
-
+        returnJson.put("act", action.name().toLowerCase());
         switch(action){
             case MOVE:
-                returnJson.put("act", "move");
                 returnJson.put("gyro", compressVecJson(gyroVec));
                 break;
             case SWIPE:
-                returnJson.put("act", "swipe");
                 returnJson.put("gyro", compressVecJson(gyroVec));
                 break;
             case BUTTON:
-                returnJson.put("act", "button");
                 returnJson.put("btnState", makeBtnStateJson());
                 break;
             case TOUCH:
-                returnJson.put("act", "touch");
                 returnJson.put("touchMov", compressVecJson(touchDelta));
         }
 
