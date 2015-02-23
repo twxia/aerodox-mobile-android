@@ -15,7 +15,7 @@ class TouchManager implements View.OnTouchListener {
     public enum Mode {TOUCH, SWIPE, NONE};
     long startClickTime = 0;
     private UDPConnection launcher;
-    private TouchModel model;
+    private final TouchModel model;
     private volatile Mode mode;
 
     TouchManager(UDPConnection launcher) {
@@ -31,11 +31,8 @@ class TouchManager implements View.OnTouchListener {
     @Override
     public boolean onTouch(View v, MotionEvent event) {
         switch (event.getAction()) {
-
             case MotionEvent.ACTION_DOWN:
-                model.setStart(event.getX(), event.getY());
-                startClickTime = event.getEventTime();
-                this.mode = Mode.SWIPE;
+                handleDown(event.getEventTime(), event.getX(), event.getY());
                 break;
 
             case MotionEvent.ACTION_MOVE:
@@ -50,6 +47,25 @@ class TouchManager implements View.OnTouchListener {
         return true;
     }
 
+    private void handleDown(long timestamp, float x, float y) {
+        model.setStart(x, y);
+        startClickTime = timestamp;
+        this.mode = Mode.SWIPE;
+    }
+
+    private void handleMove(float x, float y) {
+
+        double distanceSquare = model.moving(x, y);
+        if(distanceSquare > Config.MOVE_THRESHOLD) {
+            this.mode = Mode.TOUCH;
+            launcher.launch(ActionBuilder.newAction(ActionBuilder.Action.TOUCH)
+                    .setTouchMove(model.getDelta())
+                    .getResult());
+        } else {
+            this.mode = Mode.SWIPE;
+        }
+    }
+
     private void handleUp(long timestamp) {
         if(timestamp - startClickTime < Config.MAX_CLICK_DURATION) {
             ActionBuilder builder = ActionBuilder.newAction(ActionBuilder.Action.BUTTON);
@@ -62,19 +78,7 @@ class TouchManager implements View.OnTouchListener {
         this.mode = Mode.NONE;
     }
 
-    private void handleMove(float x, float y) {
-        double distanceSquare = model.moving(x, y);
-        if(distanceSquare > Config.MOVE_THRESHOLD) {
-            this.mode = Mode.TOUCH;
 
-            launcher.launch(ActionBuilder.newAction(ActionBuilder.Action.TOUCH)
-                                         .setTouchMove(model.getDelta())
-                                         .getResult());
-
-        } else {
-            this.mode = Mode.SWIPE;
-        }
-    }
 
     private static class TouchModel {
         double[] start;
