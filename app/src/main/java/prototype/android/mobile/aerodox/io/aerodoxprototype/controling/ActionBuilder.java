@@ -68,7 +68,7 @@ public abstract class ActionBuilder {
             JSONArray compressedJson = new JSONArray();
             try {
                 for (int i = 0; i < vec.length; i++) {
-                    compressedJson.put(i, Long.toString((long)vec[i] * EXPO, 36));
+                    compressedJson.put(i, Long.toString((long)(vec[i] * EXPO), 36));
                 }
             } catch (JSONException e) {
                 e.printStackTrace();
