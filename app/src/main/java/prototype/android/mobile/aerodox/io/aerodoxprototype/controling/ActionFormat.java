@@ -70,7 +70,7 @@ public class ActionFormat {
     public static JSONObject makeBtnStateJson() throws JSONException {
         JSONObject obj = new JSONObject();
 
-        obj.put("num", ActionFormat.btnState.key);
+        obj.put("num", ActionFormat.btnState.key.getValue());
         obj.put("isPress", ActionFormat.btnState.press);
 
         return obj;

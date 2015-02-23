@@ -34,27 +34,19 @@ public class UDPConnection extends Thread {
 
     @Override
     public void run() {
-        super.run();
         connectSocket();
 
         Looper.prepare();
         mHandler = new Handler(){
             @Override
             public void handleMessage(Message msg) {
-                super.handleMessage(msg);
-
-                try {
-                    writeAction(ActionFormat.makeActionJson());
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
+                sendAction((JSONObject) msg.obj);
             }
         };
         Looper.loop();
     }
 
     private void connectSocket() {
-
         try {
             socket = new DatagramSocket();
             socket.setSendBufferSize(120);
@@ -64,7 +56,7 @@ public class UDPConnection extends Thread {
         }
     }
 
-    private void writeAction(JSONObject jsonObject) {
+    private void sendAction(JSONObject jsonObject) {
         System.out.println(jsonObject.toString());
 
         try {
@@ -76,8 +68,16 @@ public class UDPConnection extends Thread {
         }
     }
 
-    public void post() {
-        mHandler.sendEmptyMessage(0);
+    public void launch() {
+        Message msg = new Message();
+
+        try {
+            msg.obj = ActionFormat.makeActionJson();
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        mHandler.sendMessage(msg);
     }
 
 }

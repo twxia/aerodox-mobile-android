@@ -32,8 +32,6 @@ public class ControlActivity extends Activity implements SensorEventListener {
 
     Button btnLeft, btnRight;
 
-    long startClickTime = 0;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -59,6 +57,7 @@ public class ControlActivity extends Activity implements SensorEventListener {
     }
 
     private class TouchListener implements View.OnTouchListener {
+        long startClickTime = 0;
 
         @Override
         public boolean onTouch(View v, MotionEvent event) {
@@ -68,20 +67,21 @@ public class ControlActivity extends Activity implements SensorEventListener {
 
                     startClickTime = Calendar.getInstance().getTimeInMillis();
 
-                    ActionFormat.setAction(Action.BUTTON);
-                    ActionFormat.setBtnState(ButtonKey.LEFT, true);
+                    ActionFormat.setAction(Action.SWIPE);
                     break;
                 case MotionEvent.ACTION_MOVE:
                     processMoving(event.getX(), event.getY());
-                    launcher.post();
+                    launcher.launch();
 
                     break;
                 case MotionEvent.ACTION_UP:
                     if(Calendar.getInstance().getTimeInMillis() - startClickTime < Config.MAX_CLICK_DURATION) {
                         ActionFormat.setAction(Action.BUTTON);
-                        launcher.post();
+
+                        ActionFormat.setBtnState(ButtonKey.LEFT, true);
+                        launcher.launch();
                         ActionFormat.setBtnState(ButtonKey.LEFT, false);
-                        launcher.post();
+                        launcher.launch();
                     }
             }
 
@@ -93,9 +93,9 @@ public class ControlActivity extends Activity implements SensorEventListener {
         double[] delta = ActionFormat.getTouchDelta();
         if(delta[0] - x > Config.MOVE_THRESHOLD ||
                 delta[1] - y > Config.MOVE_THRESHOLD)
-            ActionFormat.setAction(Action.SWIPE);
-        else
             ActionFormat.setAction(Action.TOUCH);
+        else
+            ActionFormat.setAction(Action.SWIPE);
 
         double[] start = ActionFormat.getTouchStart();
         delta[0] = x - start[0];
@@ -121,7 +121,7 @@ public class ControlActivity extends Activity implements SensorEventListener {
 
             ActionFormat.setAction(Action.BUTTON);
             ActionFormat.setBtnState(btnKey, btnPress);
-
+            launcher.launch();
             return false;
         }
     }
@@ -132,6 +132,7 @@ public class ControlActivity extends Activity implements SensorEventListener {
         switch (event.sensor.getType()){
             case Sensor.TYPE_GYROSCOPE:
                 handleGyro(event);
+                launcher.launch();
                 break;
             default:
                 Toast.makeText(getApplicationContext(), "No Sensor Responds", Toast.LENGTH_SHORT).show();
@@ -151,6 +152,7 @@ public class ControlActivity extends Activity implements SensorEventListener {
         gyroVec[1] = S2REAL_VOL * event.values[1];
         gyroVec[2] = S2REAL_VOL * event.values[2];
 
+        ActionFormat.setAction(Action.MOVE);
         ActionFormat.setGyroVec(gyroVec);
     }
 
