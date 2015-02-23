@@ -11,15 +11,15 @@ import prototype.android.mobile.aerodox.io.aerodoxprototype.networking.UDPConnec
 /**
 * Created by maeglin89273 on 2/23/15.
 */
-class TouchManager implements View.OnTouchListener {
+class TouchMediator implements View.OnTouchListener {
     public enum Mode {TOUCH, SWIPE, NONE};
-    long startClickTime = 0;
-    private UDPConnection launcher;
+    private long startClickTime = 0;
+    private UDPConnection actionLauncher;
     private final TouchModel model;
     private volatile Mode mode;
 
-    TouchManager(UDPConnection launcher) {
-        this.launcher = launcher;
+    TouchMediator(UDPConnection actionLauncher) {
+        this.actionLauncher = actionLauncher;
         this.model = new TouchModel();
         this.mode = Mode.NONE;
     }
@@ -58,7 +58,7 @@ class TouchManager implements View.OnTouchListener {
         double distanceSquare = model.moving(x, y);
         if(distanceSquare > Config.MOVE_THRESHOLD) {
             this.mode = Mode.TOUCH;
-            launcher.launch(ActionBuilder.newAction(ActionBuilder.Action.TOUCH)
+            actionLauncher.launch(ActionBuilder.newAction(ActionBuilder.Action.TOUCH)
                     .setTouchMove(model.getDelta())
                     .getResult());
         } else {
@@ -70,9 +70,9 @@ class TouchManager implements View.OnTouchListener {
         if(timestamp - startClickTime < Config.MAX_CLICK_DURATION) {
             ActionBuilder builder = ActionBuilder.newAction(ActionBuilder.Action.BUTTON);
             builder.setBtnState(ButtonKey.LEFT, true);
-            launcher.launch(builder.getResult());
+            actionLauncher.launch(builder.getResult());
             builder.setBtnState(ButtonKey.LEFT, false);
-            launcher.launch(builder.getResult());
+            actionLauncher.launch(builder.getResult());
         }
 
         this.mode = Mode.NONE;

@@ -18,14 +18,14 @@ import prototype.android.mobile.aerodox.io.aerodoxprototype.networking.UDPConnec
 
 public class ControlActivity extends Activity implements SensorEventListener {
 
-    private UDPConnection launcher;
+    private UDPConnection actionLauncher;
 
     private SensorManager sensorMgr;
     private Sensor gyro;
 
     private Button btnLeft, btnRight;
 
-    private TouchManager touchManager;
+    private TouchMediator touchMediator;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,18 +38,18 @@ public class ControlActivity extends Activity implements SensorEventListener {
         Intent intent = this.getIntent();
         String clientIP = intent.getStringExtra("ip");
 
-        launcher = new UDPConnection(clientIP);
-        launcher.start();
+        actionLauncher = new UDPConnection(clientIP);
+        actionLauncher.start();
 
         btnLeft = (Button) this.findViewById(R.id.btnLeft);
         btnRight = (Button) this.findViewById(R.id.btnRight);
 
-        btnLeft.setOnTouchListener(new ButtonListener(launcher));
-        btnRight.setOnTouchListener(new ButtonListener(launcher));
+        btnLeft.setOnTouchListener(new ButtonListener(actionLauncher));
+        btnRight.setOnTouchListener(new ButtonListener(actionLauncher));
 
         SurfaceView touchPad = (SurfaceView) this.findViewById(R.id.touchPad);
-        this.touchManager = new TouchManager(launcher);
-        touchPad.setOnTouchListener(this.touchManager);
+        this.touchMediator = new TouchMediator(actionLauncher);
+        touchPad.setOnTouchListener(this.touchMediator);
 
     }
 
@@ -72,8 +72,8 @@ public class ControlActivity extends Activity implements SensorEventListener {
 
     private static final float S2REAL_VOL = 0.02f;
     private void handleGyro(SensorEvent event) {
-        TouchManager.Mode mode = this.touchManager.getMode();
-        if (mode == TouchManager.Mode.TOUCH) {
+        TouchMediator.Mode mode = this.touchMediator.getMode();
+        if (mode == TouchMediator.Mode.TOUCH) {
             return;
         }
         
@@ -83,25 +83,21 @@ public class ControlActivity extends Activity implements SensorEventListener {
         gyroVec[1] = S2REAL_VOL * event.values[1];
         gyroVec[2] = S2REAL_VOL * event.values[2];
         
-        ActionBuilder.Action action = (mode == TouchManager.Mode.SWIPE)? ActionBuilder.Action.SWIPE: ActionBuilder.Action.MOVE;
-
-
-        launcher.launch(ActionBuilder.newAction(action)
-                                     .setGyroVec(gyroVec)
-                                     .getResult());
+        ActionBuilder.Action action = (mode == TouchMediator.Mode.SWIPE)? ActionBuilder.Action.SWIPE: ActionBuilder.Action.MOVE;
+        actionLauncher.launch(ActionBuilder.newAction(action)
+                                           .setGyroVec(gyroVec)
+                                           .getResult());
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-
         sensorMgr.registerListener(this, gyro, SensorManager.SENSOR_DELAY_GAME);
     }
 
     @Override
     protected void onStop() {
         super.onStop();
-
         sensorMgr.unregisterListener(this);
     }
 
