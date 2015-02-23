@@ -3,7 +3,6 @@ package prototype.android.mobile.aerodox.io.aerodoxprototype.networking;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
-import android.util.Log;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -14,7 +13,7 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
-import prototype.android.mobile.aerodox.io.aerodoxprototype.controling.ActionFormat;
+import prototype.android.mobile.aerodox.io.aerodoxprototype.controling.ActionBuilder;
 
 /**
  * Created by xia on 2/21/15.
@@ -57,7 +56,7 @@ public class UDPConnection extends Thread {
     }
 
     private void sendAction(JSONObject jsonObject) {
-        System.out.println(jsonObject.toString());
+//        System.out.println(jsonObject.toString());
 
         try {
             byte[] data = jsonObject.toString().getBytes();
@@ -68,14 +67,9 @@ public class UDPConnection extends Thread {
         }
     }
 
-    public void launch() {
+    public void launch(JSONObject action) {
         Message msg = new Message();
-
-        try {
-            msg.obj = ActionFormat.makeActionJson();
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
+        msg.obj = action;
 
         mHandler.sendMessage(msg);
     }

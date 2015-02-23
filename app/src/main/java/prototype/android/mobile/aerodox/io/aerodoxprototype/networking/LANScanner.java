@@ -88,7 +88,7 @@ public class LANScanner {
         String host = localIP.substring(0, localIP.lastIndexOf('.') + 1);
 
         for (int i=1; i<255; i++){
-            IPs.add(host + "." + i);
+            IPs.add(host + i);
         }
 
         return IPs;

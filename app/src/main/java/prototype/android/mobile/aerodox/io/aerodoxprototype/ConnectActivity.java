@@ -8,6 +8,7 @@ import android.os.Message;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
@@ -27,6 +28,7 @@ public class ConnectActivity extends Activity {
     private LinearLayout ipLoadingLayout;
     private ArrayAdapter<HostInfo> listAdapter;
 
+    private boolean isScanning;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,14 +40,25 @@ public class ConnectActivity extends Activity {
     }
     
     private void initViews() {
-//        Button btnConnect = (Button) findViewById(R.id.btnConnect);
+
         ImageView logo = (ImageView) findViewById(R.id.imgLogo);
         logo.setImageResource(R.drawable.logo);
 
         ipLoadingLayout = (LinearLayout) findViewById(R.id.ipLoadingLayout);
         initHostList();
+        initRefreshButton();
     }
-    
+
+    private void initRefreshButton() {
+        Button btnRefresh = (Button) findViewById(R.id.btnRefresh);
+        btnRefresh.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startScanning();
+            }
+        });
+    }
+
     private void initHostList() {
         hostList = (ListView) findViewById(R.id.hostList);
 
@@ -67,6 +80,13 @@ public class ConnectActivity extends Activity {
     }
 
     private void startScanning() {
+        if (this.isScanning) {
+            return;
+        }
+
+        this.isScanning = true;
+        listAdapter.clear();
+        ipLoadingLayout.setVisibility(View.VISIBLE);
         final Handler mHandler = new Handler() {
             public void handleMessage(Message msg) {
                 listAdapter.add((HostInfo)msg.obj);
@@ -76,6 +96,7 @@ public class ConnectActivity extends Activity {
         final Handler loadingLayoutHider = new Handler() {
             public void handleMessage(Message msg) {
                 ipLoadingLayout.setVisibility(View.GONE);
+                isScanning = false;
             }
         };
 

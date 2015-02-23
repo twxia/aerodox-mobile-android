@@ -30,7 +30,7 @@
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
             android:layout_below="@+id/imgLogo"
-            android:layout_above="@+id/btnConnect">
+            android:layout_above="@+id/btnRefresh">
 
             <TextView
                 android:layout_width="wrap_content"
@@ -88,8 +88,8 @@
         <Button
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Connect"
-            android:id="@+id/btnConnect"
+            android:text="Refresh"
+            android:id="@+id/btnRefresh"
             android:layout_gravity="center_horizontal"
             android:layout_alignParentBottom="true"
             android:layout_alignLeft="@+id/imgLogo"
