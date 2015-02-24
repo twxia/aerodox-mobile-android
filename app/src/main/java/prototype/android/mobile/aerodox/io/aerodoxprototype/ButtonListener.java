@@ -13,6 +13,7 @@ import prototype.android.mobile.aerodox.io.aerodoxprototype.networking.UDPConnec
 class ButtonListener implements View.OnTouchListener {
 
     private UDPConnection actionLauncher;
+
     ButtonListener(UDPConnection actionLauncher) {
         this.actionLauncher = actionLauncher;
     }
@@ -20,8 +21,8 @@ class ButtonListener implements View.OnTouchListener {
     @Override
     public boolean onTouch(View v, MotionEvent event) {
         ButtonKey btnKey = (v.getId() == R.id.btnLeft) ? ButtonKey.LEFT : ButtonKey.RIGHT;
-        boolean btnPress = false;
 
+        boolean btnPress;
         switch (event.getAction()){
             case MotionEvent.ACTION_DOWN:
                 btnPress = true;
@@ -29,11 +30,13 @@ class ButtonListener implements View.OnTouchListener {
             case MotionEvent.ACTION_UP:
                 btnPress = false;
                 break;
+            default:
+                return false;
         }
 
         actionLauncher.launch(ActionBuilder.newAction(ActionBuilder.Action.BUTTON)
-                .setBtnState(btnKey, btnPress)
-                .getResult());
+                                           .setBtnState(btnKey, btnPress)
+                                           .getResult());
         return false;
     }
 }
