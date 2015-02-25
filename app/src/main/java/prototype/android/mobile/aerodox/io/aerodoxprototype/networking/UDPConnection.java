@@ -1,63 +1,36 @@
 package prototype.android.mobile.aerodox.io.aerodoxprototype.networking;
 
-import android.os.Handler;
-import android.os.Looper;
-import android.os.Message;
-
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-
-import prototype.android.mobile.aerodox.io.aerodoxprototype.controling.ActionBuilder;
+import java.net.InetSocketAddress;
+import java.net.SocketAddress;
+import java.net.SocketException;
 
 /**
  * Created by xia on 2/21/15.
  */
-public class UDPConnection extends Thread {
-    Handler mHandler;
-    DatagramSocket socket;
-    InetAddress clientIP;
+public class UDPConnection extends BasicConnection {
+    private DatagramSocket socket;
+    private SocketAddress clientIP;
 
-    public UDPConnection(String IP){
-        try {
-            clientIP = InetAddress.getByName(IP);
-        } catch (UnknownHostException e) {
-            e.printStackTrace();
-        }
+    public UDPConnection(String ip){
+        clientIP = new InetSocketAddress(ip, Config.UDP_PORT);
     }
 
     @Override
-    public void run() {
-        connectSocket();
+    protected void connectSocket() throws SocketException {
 
-        Looper.prepare();
-        mHandler = new Handler(){
-            @Override
-            public void handleMessage(Message msg) {
-                sendAction((JSONObject) msg.obj);
-            }
-        };
-        Looper.loop();
+        socket = new DatagramSocket();
+        socket.setSendBufferSize(120);
+        socket.connect(clientIP);
+
     }
 
-    private void connectSocket() {
-        try {
-            socket = new DatagramSocket();
-            socket.setSendBufferSize(120);
-            socket.connect(clientIP, Config.UDP_PORT);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void sendAction(JSONObject jsonObject) {
-//        System.out.println(jsonObject.toString());
-
+    @Override
+    protected void sendAction(JSONObject jsonObject) {
         try {
             byte[] data = jsonObject.toString().getBytes();
             DatagramPacket packet = new DatagramPacket(data, data.length);
@@ -67,11 +40,9 @@ public class UDPConnection extends Thread {
         }
     }
 
-    public void launch(JSONObject action) {
-        Message msg = new Message();
-        msg.obj = action;
-
-        mHandler.sendMessage(msg);
+    @Override
+    protected void closeConnection() {
+        socket.close();
     }
 
 }

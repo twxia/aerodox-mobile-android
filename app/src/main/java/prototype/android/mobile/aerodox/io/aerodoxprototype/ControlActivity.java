@@ -13,12 +13,14 @@ import android.widget.Button;
 import android.widget.Toast;
 
 import prototype.android.mobile.aerodox.io.aerodoxprototype.controling.ActionBuilder;
+import prototype.android.mobile.aerodox.io.aerodoxprototype.networking.Connection;
+import prototype.android.mobile.aerodox.io.aerodoxprototype.networking.LANConnection;
 import prototype.android.mobile.aerodox.io.aerodoxprototype.networking.UDPConnection;
 
 
 public class ControlActivity extends Activity implements SensorEventListener {
 
-    private UDPConnection actionLauncher;
+    private Connection actionLauncher;
 
     private SensorManager sensorMgr;
     private Sensor gyro;
@@ -38,7 +40,7 @@ public class ControlActivity extends Activity implements SensorEventListener {
         Intent intent = this.getIntent();
         String clientIP = intent.getStringExtra("ip");
 
-        actionLauncher = new UDPConnection(clientIP);
+        actionLauncher = new LANConnection(clientIP);
         actionLauncher.start();
 
         btnLeft = (Button) this.findViewById(R.id.btnLeft);
@@ -84,9 +86,9 @@ public class ControlActivity extends Activity implements SensorEventListener {
         gyroVec[2] = S2REAL_VOL * event.values[2];
         
         ActionBuilder.Action action = (mode == TouchMediator.Mode.SWIPE)? ActionBuilder.Action.SWIPE: ActionBuilder.Action.MOVE;
-        actionLauncher.launch(ActionBuilder.newAction(action)
-                                           .setGyroVec(gyroVec)
-                                           .getResult());
+        actionLauncher.launchAction(ActionBuilder.newAction(action)
+                .setGyroVec(gyroVec)
+                .getResult());
     }
 
     @Override

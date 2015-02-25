@@ -6,7 +6,7 @@ import android.view.View;
 import prototype.android.mobile.aerodox.io.aerodoxprototype.controling.ActionBuilder;
 import prototype.android.mobile.aerodox.io.aerodoxprototype.controling.ButtonKey;
 import prototype.android.mobile.aerodox.io.aerodoxprototype.controling.Config;
-import prototype.android.mobile.aerodox.io.aerodoxprototype.networking.UDPConnection;
+import prototype.android.mobile.aerodox.io.aerodoxprototype.networking.Connection;
 
 /**
 * Created by maeglin89273 on 2/23/15.
@@ -14,11 +14,11 @@ import prototype.android.mobile.aerodox.io.aerodoxprototype.networking.UDPConnec
 class TouchMediator implements View.OnTouchListener {
     public enum Mode {TOUCH, SWIPE, NONE};
 
-    private UDPConnection actionLauncher;
+    private Connection actionLauncher;
     private final TouchModel model;
     private volatile Mode mode;
 
-    TouchMediator(UDPConnection actionLauncher) {
+    TouchMediator(Connection actionLauncher) {
         this.actionLauncher = actionLauncher;
         this.model = new TouchModel();
         this.mode = Mode.NONE;
@@ -57,7 +57,7 @@ class TouchMediator implements View.OnTouchListener {
         double distanceSquare = model.moving(x, y);
         if(distanceSquare > Config.MOVE_THRESHOLD) {
             this.mode = Mode.TOUCH;
-            actionLauncher.launch(ActionBuilder.newAction(ActionBuilder.Action.TOUCH)
+            actionLauncher.launchAction(ActionBuilder.newAction(ActionBuilder.Action.TOUCH)
                     .setTouchMove(model.getDelta())
                     .getResult());
         } else {
@@ -69,9 +69,9 @@ class TouchMediator implements View.OnTouchListener {
         if(downDuration < Config.MAX_CLICK_DURATION) {
             ActionBuilder builder = ActionBuilder.newAction(ActionBuilder.Action.BUTTON);
             builder.setBtnState(ButtonKey.LEFT, true);
-            actionLauncher.launch(builder.getResult());
+            actionLauncher.launchAction(builder.getResult());
             builder.setBtnState(ButtonKey.LEFT, false);
-            actionLauncher.launch(builder.getResult());
+            actionLauncher.launchAction(builder.getResult());
         }
 
         this.mode = Mode.NONE;

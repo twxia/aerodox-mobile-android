@@ -5,6 +5,7 @@ import android.view.View;
 
 import prototype.android.mobile.aerodox.io.aerodoxprototype.controling.ActionBuilder;
 import prototype.android.mobile.aerodox.io.aerodoxprototype.controling.ButtonKey;
+import prototype.android.mobile.aerodox.io.aerodoxprototype.networking.Connection;
 import prototype.android.mobile.aerodox.io.aerodoxprototype.networking.UDPConnection;
 
 /**
@@ -12,9 +13,9 @@ import prototype.android.mobile.aerodox.io.aerodoxprototype.networking.UDPConnec
 */
 class ButtonListener implements View.OnTouchListener {
 
-    private UDPConnection actionLauncher;
+    private Connection actionLauncher;
 
-    ButtonListener(UDPConnection actionLauncher) {
+    ButtonListener(Connection actionLauncher) {
         this.actionLauncher = actionLauncher;
     }
 
@@ -34,9 +35,9 @@ class ButtonListener implements View.OnTouchListener {
                 return false;
         }
 
-        actionLauncher.launch(ActionBuilder.newAction(ActionBuilder.Action.BUTTON)
-                                           .setBtnState(btnKey, btnPress)
-                                           .getResult());
+        actionLauncher.launchAction(ActionBuilder.newAction(ActionBuilder.Action.BUTTON)
+                .setBtnState(btnKey, btnPress)
+                .getResult());
         return false;
     }
 }
