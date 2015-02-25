@@ -13,7 +13,7 @@ import prototype.android.mobile.aerodox.io.aerodoxprototype.networking.UDPConnec
 */
 class TouchMediator implements View.OnTouchListener {
     public enum Mode {TOUCH, SWIPE, NONE};
-    private long startClickTime = 0;
+
     private UDPConnection actionLauncher;
     private final TouchModel model;
     private volatile Mode mode;
@@ -32,7 +32,7 @@ class TouchMediator implements View.OnTouchListener {
     public boolean onTouch(View v, MotionEvent event) {
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
-                handleDown(event.getEventTime(), event.getX(), event.getY());
+                handleDown(event.getX(), event.getY());
                 break;
 
             case MotionEvent.ACTION_MOVE:
@@ -40,16 +40,15 @@ class TouchMediator implements View.OnTouchListener {
                 break;
 
             case MotionEvent.ACTION_UP:
-               handleUp(event.getEventTime());
+               handleUp(event.getEventTime() - event.getDownTime());
 
         }
 
         return true;
     }
 
-    private void handleDown(long timestamp, float x, float y) {
+    private void handleDown(float x, float y) {
         model.setStart(x, y);
-        startClickTime = timestamp;
         this.mode = Mode.SWIPE;
     }
 
@@ -66,8 +65,8 @@ class TouchMediator implements View.OnTouchListener {
         }
     }
 
-    private void handleUp(long timestamp) {
-        if(timestamp - startClickTime < Config.MAX_CLICK_DURATION) {
+    private void handleUp(long downDuration) {
+        if(downDuration < Config.MAX_CLICK_DURATION) {
             ActionBuilder builder = ActionBuilder.newAction(ActionBuilder.Action.BUTTON);
             builder.setBtnState(ButtonKey.LEFT, true);
             actionLauncher.launch(builder.getResult());
