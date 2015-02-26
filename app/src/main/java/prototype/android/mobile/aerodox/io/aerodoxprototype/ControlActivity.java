@@ -86,6 +86,7 @@ public class ControlActivity extends Activity implements SensorEventListener {
         gyroVec[2] = S2REAL_VOL * event.values[2];
         
         ActionBuilder.Action action = (mode == TouchMediator.Mode.SWIPE)? ActionBuilder.Action.SWIPE: ActionBuilder.Action.MOVE;
+
         actionLauncher.launchAction(ActionBuilder.newAction(action)
                 .setGyroVec(gyroVec)
                 .getResult());
