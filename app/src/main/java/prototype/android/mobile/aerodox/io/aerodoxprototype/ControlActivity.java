@@ -8,6 +8,7 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
 
+import android.view.KeyEvent;
 import android.view.SurfaceView;
 import android.widget.Button;
 import android.widget.Toast;
@@ -15,6 +16,7 @@ import android.widget.Toast;
 import org.json.JSONObject;
 
 import prototype.android.mobile.aerodox.io.aerodoxprototype.controling.ActionBuilder;
+import prototype.android.mobile.aerodox.io.aerodoxprototype.controling.Config;
 import prototype.android.mobile.aerodox.io.aerodoxprototype.controling.Header;
 import prototype.android.mobile.aerodox.io.aerodoxprototype.networking.Connection;
 import prototype.android.mobile.aerodox.io.aerodoxprototype.networking.ConnectionFactory;
@@ -57,6 +59,36 @@ public class ControlActivity extends Activity implements SensorEventListener {
         this.touchMediator = new TouchMediator(actionLauncher);
         touchPad.setOnTouchListener(this.touchMediator);
 
+    }
+
+    private static int Sensitivity = 3;
+    @Override
+    public boolean dispatchKeyEvent(KeyEvent event) {
+        int action = event.getAction();
+        int keyCode = event.getKeyCode();
+
+        switch (keyCode) {
+            case KeyEvent.KEYCODE_VOLUME_UP:
+                if (action == KeyEvent.ACTION_DOWN) {
+                    if(Sensitivity < Config.MAX_SENSITIVITY)
+                        Sensitivity++;
+                }
+                break;
+            case KeyEvent.KEYCODE_VOLUME_DOWN:
+                if (action == KeyEvent.ACTION_DOWN) {
+                   if(Sensitivity > Config.MIN_SENSITIVITY)
+                        Sensitivity--;
+                }
+                break;
+            default:
+                return super.dispatchKeyEvent(event);
+        }
+
+        actionLauncher.launchAction(ActionBuilder.newAction(Header.CONFIG)
+                .setSensitivity(Sensitivity)
+                .getResult());
+
+        return true;
     }
 
     private void initActionLauncher(HostInfo host) {
