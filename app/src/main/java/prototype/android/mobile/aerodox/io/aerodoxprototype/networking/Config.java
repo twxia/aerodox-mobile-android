@@ -7,4 +7,5 @@ public interface Config {
     public static final int UDP_PORT = 1810;
     public static final int TCP_PORT = 8101;
     public static final int TIMEOUT = 200;
+    public static final String RESPONSE_KEY = "rsp";
 }

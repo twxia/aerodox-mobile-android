@@ -4,10 +4,15 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
-import java.net.SocketException;
+import java.util.HashMap;
+import java.util.Map;
+
+import prototype.android.mobile.aerodox.io.aerodoxprototype.controling.ActionBuilder;
+import prototype.android.mobile.aerodox.io.aerodoxprototype.controling.Header;
 
 /**
  * Created by maeglin89273 on 2/25/15.
@@ -18,6 +23,12 @@ public abstract class BasicConnection implements Connection {
 
     private Handler messageHandler;
     private Thread executor;
+    private Map<String, ResponseHandler> rspHandlerMap;
+
+    protected BasicConnection() {
+        this.rspHandlerMap = new HashMap<>();
+
+    }
 
     protected abstract void connectSocket() throws IOException;
 
@@ -25,11 +36,11 @@ public abstract class BasicConnection implements Connection {
 
     @Override
     public void start() {
-        prepareExecutor();
+        initExecutor();
         executor.start();
     }
 
-    private void prepareExecutor() {
+    private void initExecutor() {
         executor = new Thread() {
 
             @Override
@@ -40,11 +51,13 @@ public abstract class BasicConnection implements Connection {
                     messageHandler = new Handler() {
                         @Override
                         public void handleMessage(Message msg) {
+                            JSONObject packet = (JSONObject) msg.obj;
                             switch (msg.what) {
                                 case SEND:
-                                    sendAction((JSONObject) msg.obj);
+                                    sendAction(packet);
                                     break;
                                 case RECIEVE:
+                                    processResponse(packet);
                                     break;
                             }
 
@@ -52,24 +65,43 @@ public abstract class BasicConnection implements Connection {
                     };
                     Looper.loop();
                 } catch (IOException e) {
-                    e.printStackTrace();
+//                    e.printStackTrace();
                 }
+                processResponse(buildPsudoCloseResponse());
             }
         };
     }
 
     @Override
     public void close() {
+
         messageHandler.getLooper().quit();
         closeConnection();
 
+    }
+
+    private JSONObject buildPsudoCloseResponse() {
+        JSONObject rsp = new JSONObject();
+        try {
+            rsp.put(Config.RESPONSE_KEY, "close");
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return rsp;
+    }
+
+    private void processResponse(JSONObject response) {
+        ResponseHandler handler = this.rspHandlerMap.get(response.remove(Config.RESPONSE_KEY));
+        handler.handle(response);
     }
 
     protected abstract void closeConnection();
 
     @Override
     public void launchAction(JSONObject action) {
-        this.queueMessage(SEND, action);
+        if (this.isConnected()) {
+            this.queueMessage(SEND, action);
+        }
     }
 
     protected void recieveResponse(JSONObject response) {
@@ -84,4 +116,8 @@ public abstract class BasicConnection implements Connection {
         messageHandler.sendMessage(msg);
     }
 
+    @Override
+    public void attachResponseHandler(Header responseHeader, ResponseHandler handler) {
+        this.rspHandlerMap.put(responseHeader.name().toLowerCase(), handler);
+    }
 }

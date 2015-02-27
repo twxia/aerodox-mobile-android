@@ -12,15 +12,7 @@ import java.util.Map;
  */
 public abstract class ActionBuilder {
 
-    public enum Action {
-        CONFIG,
-        MOVE,
-        TOUCH,
-        BUTTON,
-        SWIPE
-    }
-
-    public static ActionBuilder newAction(Action action) {
+    public static ActionBuilder newAction(Header action) {
         return new ActionBuilderImpl(action);
     }
 
@@ -35,7 +27,7 @@ public abstract class ActionBuilder {
 
         private Map<String, Object> buildingAction;
 
-        private ActionBuilderImpl(Action action) {
+        private ActionBuilderImpl(Header action) {
             this.buildingAction = new HashMap<>();
             this.buildingAction.put("act", action.name().toLowerCase());
         }

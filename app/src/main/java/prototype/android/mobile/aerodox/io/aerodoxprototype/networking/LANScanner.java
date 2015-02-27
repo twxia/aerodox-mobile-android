@@ -30,6 +30,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+import prototype.android.mobile.aerodox.io.aerodoxprototype.controling.ActionBuilder;
+import prototype.android.mobile.aerodox.io.aerodoxprototype.controling.Header;
+
 /**
  * Created by xia on 2/20/15.
  */
@@ -97,15 +100,12 @@ public class LANScanner {
     private static Callable<HostInfo> makeHostChecker(final String ip, final int port) {
         return new Callable<HostInfo>() {
             @Override public HostInfo call() {
-                try {
-                    Socket socket = new Socket();
-                    socket.connect(new InetSocketAddress(ip, port), Config.TIMEOUT);
-                    String host = scanHost(socket);
 
-                    return new HostInfo(host, ip);
-                } catch (Exception ex) {
+                    String host = scanHost(ip, port);
+                    if (host != null) {
+                        return new HostInfo(host, HostInfo.HostType.LAN, ip);
+                    }
                     return null;
-                }
             }
         };
     }
@@ -138,47 +138,52 @@ public class LANScanner {
         return result;
     }
 
-    @TargetApi(Build.VERSION_CODES.KITKAT)
-    private static String scanHost(Socket socket) {
-        String host = null;
-        try (Writer writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
-             BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
-            writer.write("[");
-            writer.write(makeScanJson().toString());
-            writer.flush();
 
-            host = handleScanResponse(reader.readLine());
-            writer.write("]");
-            writer.flush();
-            socket.close();
-        } catch (IOException e) {
-            e.printStackTrace();
+    private static String scanHost(String ip, int port) {
+        SyncTCPConnection connection = new SyncTCPConnection(ip, port);
+        String host = null;
+        try {
+            JSONObject response = connection.post(ActionBuilder.newAction(Header.SCAN).getResult());
+            host = response.getString("host");
+        } catch (IOException| JSONException e) {
+            //timeout
         }
 
         return host;
     }
 
-    private static String handleScanResponse(String s) {
-        String host = null;
-        try {
-            JSONObject response = new JSONObject(s);
-            if (response.getString("rsp").equals("scan")) {
-                host = response.getString("host");
+
+
+    private static class SyncTCPConnection {
+        private final InetSocketAddress clientIP;
+
+        private SyncTCPConnection(String ip, int port) {
+            clientIP = new InetSocketAddress(ip, port);
+        }
+
+        @TargetApi(Build.VERSION_CODES.KITKAT)
+        public JSONObject post(JSONObject request) throws IOException {
+            Socket socket = new Socket();
+            socket.connect(clientIP, Config.TIMEOUT);
+
+            JSONObject response = null;
+            try (Writer writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+                 BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
+                writer.write("[");
+                writer.write(request.toString());
+                writer.flush();
+
+                response = new JSONObject(reader.readLine());
+                writer.write("]");
+                writer.flush();
+                socket.close();
+                return response;
+            } catch (JSONException| IOException e) {
+                e.printStackTrace();
+
             }
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-        return host;
-    }
 
-    private static JSONObject makeScanJson() {
-        JSONObject action = new JSONObject();
-        try {
-            action.put("act", "scan");
-        } catch (JSONException e) {
-            e.printStackTrace();
+            throw new IOException("connection is not stable");
         }
-        return action;
     }
-
 }

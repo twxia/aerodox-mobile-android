@@ -36,7 +36,7 @@ public class UDPConnection extends BasicConnection {
             DatagramPacket packet = new DatagramPacket(data, data.length);
             socket.send(packet);
         } catch (IOException e) {
-            e.printStackTrace();
+//            e.printStackTrace();
         }
     }
 
@@ -45,4 +45,8 @@ public class UDPConnection extends BasicConnection {
         socket.close();
     }
 
+    @Override
+    public boolean isConnected() {
+        return socket !=null? socket.isConnected(): false;
+    }
 }

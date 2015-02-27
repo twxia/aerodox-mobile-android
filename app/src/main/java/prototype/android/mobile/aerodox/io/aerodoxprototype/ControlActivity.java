@@ -12,14 +12,19 @@ import android.view.SurfaceView;
 import android.widget.Button;
 import android.widget.Toast;
 
+import org.json.JSONObject;
+
 import prototype.android.mobile.aerodox.io.aerodoxprototype.controling.ActionBuilder;
+import prototype.android.mobile.aerodox.io.aerodoxprototype.controling.Header;
 import prototype.android.mobile.aerodox.io.aerodoxprototype.networking.Connection;
+import prototype.android.mobile.aerodox.io.aerodoxprototype.networking.ConnectionFactory;
+import prototype.android.mobile.aerodox.io.aerodoxprototype.networking.HostInfo;
 import prototype.android.mobile.aerodox.io.aerodoxprototype.networking.LANConnection;
-import prototype.android.mobile.aerodox.io.aerodoxprototype.networking.UDPConnection;
+import prototype.android.mobile.aerodox.io.aerodoxprototype.networking.ResponseHandler;
 
 
 public class ControlActivity extends Activity implements SensorEventListener {
-
+    private HostInfo host;
     private Connection actionLauncher;
 
     private SensorManager sensorMgr;
@@ -38,10 +43,9 @@ public class ControlActivity extends Activity implements SensorEventListener {
         gyro = sensorMgr.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
 
         Intent intent = this.getIntent();
-        String clientIP = intent.getStringExtra("ip");
+        host = (HostInfo) intent.getSerializableExtra("host");
 
-        actionLauncher = new LANConnection(clientIP);
-        actionLauncher.start();
+        initActionLauncher(host);
 
         btnLeft = (Button) this.findViewById(R.id.btnLeft);
         btnRight = (Button) this.findViewById(R.id.btnRight);
@@ -55,6 +59,26 @@ public class ControlActivity extends Activity implements SensorEventListener {
 
     }
 
+    private void initActionLauncher(HostInfo host) {
+
+        actionLauncher = ConnectionFactory.newConnection(host);
+        actionLauncher.attachResponseHandler(Header.CONFIG, new ResponseHandler() {
+
+            @Override
+            public void handle(JSONObject rspContent) {
+                System.out.println(rspContent);
+                // change configs here
+            }
+        });
+        actionLauncher.attachResponseHandler(Header.CLOSE, new ResponseHandler() {
+            @Override
+            public void handle(JSONObject rspContent) {
+                System.out.println("Connection is close");
+                //popup connection-closed message
+            }
+        });
+        actionLauncher.start();
+    }
 
     @Override
     public void onSensorChanged(SensorEvent event) {
@@ -85,7 +109,7 @@ public class ControlActivity extends Activity implements SensorEventListener {
         gyroVec[1] = S2REAL_VOL * event.values[1];
         gyroVec[2] = S2REAL_VOL * event.values[2];
         
-        ActionBuilder.Action action = (mode == TouchMediator.Mode.SWIPE)? ActionBuilder.Action.SWIPE: ActionBuilder.Action.MOVE;
+        Header action = (mode == TouchMediator.Mode.SWIPE)? Header.SWIPE: Header.MOVE;
 
         actionLauncher.launchAction(ActionBuilder.newAction(action)
                 .setGyroVec(gyroVec)

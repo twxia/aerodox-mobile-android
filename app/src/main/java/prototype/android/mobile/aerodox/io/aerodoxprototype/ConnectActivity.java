@@ -73,7 +73,7 @@ public class ConnectActivity extends Activity {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Intent intent = new Intent();
                 intent.setClass(ConnectActivity.this, ControlActivity.class);
-                intent.putExtra("ip", availableHosts.get(position).getIP());
+                intent.putExtra("host", availableHosts.get(position));
                 startActivity(intent);
             }
         });

@@ -6,7 +6,7 @@ import org.json.JSONObject;
 import java.util.HashSet;
 import java.util.Set;
 
-import prototype.android.mobile.aerodox.io.aerodoxprototype.controling.ActionBuilder;
+import prototype.android.mobile.aerodox.io.aerodoxprototype.controling.Header;
 
 /**
  * Created by maeglin89273 on 2/25/15.
@@ -18,18 +18,18 @@ public class LANConnection implements Connection {
     private static final Set<String> MOTION_CLASSIFIER;
     static {
         MOTION_CLASSIFIER = new HashSet<>();
-        addActionsToSet(MOTION_CLASSIFIER, ActionBuilder.Action.MOVE,
-                                           ActionBuilder.Action.SWIPE,
-                                           ActionBuilder.Action.TOUCH);
+        addActionsToSet(MOTION_CLASSIFIER, Header.MOVE,
+                                           Header.SWIPE,
+                                           Header.TOUCH);
 
     }
-    private static void addActionsToSet(Set<String> set, ActionBuilder.Action... actions) {
-        for (ActionBuilder.Action action: actions) {
+    private static void addActionsToSet(Set<String> set, Header... actions) {
+        for (Header action: actions) {
             set.add(action.name().toLowerCase());
         }
     }
 
-    public LANConnection(String ip) {
+    LANConnection(String ip) {
         this.tcp = new TCPConnection(ip);
         this.udp = new UDPConnection(ip);
 
@@ -48,6 +48,11 @@ public class LANConnection implements Connection {
     }
 
     @Override
+    public void attachResponseHandler(Header responseHeader, ResponseHandler handler) {
+        this.tcp.attachResponseHandler(responseHeader, handler);
+    }
+
+    @Override
     public void launchAction(JSONObject action) {
 
         try {
@@ -57,5 +62,10 @@ public class LANConnection implements Connection {
         } catch (JSONException e) {
             e.printStackTrace();
         }
+    }
+
+    @Override
+    public boolean isConnected() {
+        return this.tcp.isConnected();
     }
 }

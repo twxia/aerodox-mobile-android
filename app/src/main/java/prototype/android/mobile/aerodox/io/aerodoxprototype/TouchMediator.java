@@ -6,6 +6,7 @@ import android.view.View;
 import prototype.android.mobile.aerodox.io.aerodoxprototype.controling.ActionBuilder;
 import prototype.android.mobile.aerodox.io.aerodoxprototype.controling.ButtonKey;
 import prototype.android.mobile.aerodox.io.aerodoxprototype.controling.Config;
+import prototype.android.mobile.aerodox.io.aerodoxprototype.controling.Header;
 import prototype.android.mobile.aerodox.io.aerodoxprototype.networking.Connection;
 
 /**
@@ -57,7 +58,7 @@ class TouchMediator implements View.OnTouchListener {
         double distanceSquare = model.moving(x, y);
         if(distanceSquare > Config.MOVE_THRESHOLD) {
             this.mode = Mode.TOUCH;
-            actionLauncher.launchAction(ActionBuilder.newAction(ActionBuilder.Action.TOUCH)
+            actionLauncher.launchAction(ActionBuilder.newAction(Header.TOUCH)
                     .setTouchMove(model.getDelta())
                     .getResult());
         } else {
@@ -67,7 +68,7 @@ class TouchMediator implements View.OnTouchListener {
 
     private void handleUp(long downDuration) {
         if(downDuration < Config.MAX_CLICK_DURATION) {
-            ActionBuilder builder = ActionBuilder.newAction(ActionBuilder.Action.BUTTON);
+            ActionBuilder builder = ActionBuilder.newAction(Header.BUTTON);
             builder.setBtnState(ButtonKey.LEFT, true);
             actionLauncher.launchAction(builder.getResult());
             builder.setBtnState(ButtonKey.LEFT, false);
