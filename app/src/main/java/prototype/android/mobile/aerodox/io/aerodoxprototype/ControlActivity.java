@@ -13,6 +13,7 @@ import android.view.SurfaceView;
 import android.widget.Button;
 import android.widget.Toast;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import prototype.android.mobile.aerodox.io.aerodoxprototype.controling.ActionBuilder;
@@ -21,7 +22,6 @@ import prototype.android.mobile.aerodox.io.aerodoxprototype.controling.Header;
 import prototype.android.mobile.aerodox.io.aerodoxprototype.networking.Connection;
 import prototype.android.mobile.aerodox.io.aerodoxprototype.networking.ConnectionFactory;
 import prototype.android.mobile.aerodox.io.aerodoxprototype.networking.HostInfo;
-import prototype.android.mobile.aerodox.io.aerodoxprototype.networking.LANConnection;
 import prototype.android.mobile.aerodox.io.aerodoxprototype.networking.ResponseHandler;
 
 
@@ -61,7 +61,7 @@ public class ControlActivity extends Activity implements SensorEventListener {
 
     }
 
-    private static int Sensitivity = 3;
+    private int sensitivity = 3;
     @Override
     public boolean dispatchKeyEvent(KeyEvent event) {
         int action = event.getAction();
@@ -70,14 +70,14 @@ public class ControlActivity extends Activity implements SensorEventListener {
         switch (keyCode) {
             case KeyEvent.KEYCODE_VOLUME_UP:
                 if (action == KeyEvent.ACTION_DOWN) {
-                    if(Sensitivity < Config.MAX_SENSITIVITY)
-                        Sensitivity++;
+                    if(sensitivity < Config.MAX_SENSITIVITY)
+                        sensitivity++;
                 }
                 break;
             case KeyEvent.KEYCODE_VOLUME_DOWN:
                 if (action == KeyEvent.ACTION_DOWN) {
-                   if(Sensitivity > Config.MIN_SENSITIVITY)
-                        Sensitivity--;
+                   if(sensitivity > Config.MIN_SENSITIVITY)
+                        sensitivity--;
                 }
                 break;
             default:
@@ -85,7 +85,7 @@ public class ControlActivity extends Activity implements SensorEventListener {
         }
 
         actionLauncher.launchAction(ActionBuilder.newAction(Header.CONFIG)
-                .setSensitivity(Sensitivity)
+                .setSensitivity(sensitivity)
                 .getResult());
 
         return true;
@@ -99,7 +99,11 @@ public class ControlActivity extends Activity implements SensorEventListener {
             @Override
             public void handle(JSONObject rspContent) {
                 System.out.println(rspContent);
-                // change configs here
+                try {
+                    sensitivity = rspContent.getInt("sensitivity");
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
             }
         });
         actionLauncher.attachResponseHandler(Header.CLOSE, new ResponseHandler() {
