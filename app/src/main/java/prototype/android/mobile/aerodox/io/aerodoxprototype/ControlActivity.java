@@ -1,6 +1,7 @@
 package prototype.android.mobile.aerodox.io.aerodoxprototype;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -8,8 +9,12 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
 
+import android.os.PowerManager;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.SurfaceView;
+import android.view.View;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.Toast;
 
@@ -41,6 +46,8 @@ public class ControlActivity extends Activity implements SensorEventListener {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_control);
 
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
         sensorMgr = (SensorManager) getSystemService(SENSOR_SERVICE);
         gyro = sensorMgr.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
 
@@ -52,8 +59,9 @@ public class ControlActivity extends Activity implements SensorEventListener {
         btnLeft = (Button) this.findViewById(R.id.btnLeft);
         btnRight = (Button) this.findViewById(R.id.btnRight);
 
-        btnLeft.setOnTouchListener(new ButtonListener(actionLauncher));
-        btnRight.setOnTouchListener(new ButtonListener(actionLauncher));
+        ButtonListener btnListener = new ButtonListener(this, actionLauncher);
+        btnLeft.setOnTouchListener(btnListener);
+        btnRight.setOnTouchListener(btnListener);
 
         SurfaceView touchPad = (SurfaceView) this.findViewById(R.id.touchPad);
         this.touchMediator = new TouchMediator(actionLauncher);
