@@ -13,20 +13,17 @@ import prototype.android.mobile.aerodox.io.aerodoxprototype.networking.Connectio
 * Created by maeglin89273 on 2/23/15.
 */
 class TouchMediator implements View.OnTouchListener {
-    public enum Mode {TOUCH, SWIPE, NONE};
 
+
+    private GyroSignalEmitter gyroEmt;
     private Connection actionLauncher;
     private final TouchModel model;
-    private volatile Mode mode;
 
-    TouchMediator(Connection actionLauncher) {
+
+    TouchMediator(GyroSignalEmitter gyroEmt, Connection actionLauncher) {
+        this.gyroEmt = gyroEmt;
         this.actionLauncher = actionLauncher;
         this.model = new TouchModel();
-        this.mode = Mode.NONE;
-    }
-
-    public Mode getMode() {
-        return this.mode;
     }
 
     @Override
@@ -50,19 +47,19 @@ class TouchMediator implements View.OnTouchListener {
 
     private void handleDown(float x, float y) {
         model.setStart(x, y);
-        this.mode = Mode.SWIPE;
+        gyroEmt.setEmmittingMode(GyroSignalEmitter.EmittingMode.SWIPE);
     }
 
     private void handleMove(float x, float y) {
 
         double distanceSquare = model.moving(x, y);
         if(distanceSquare > Config.MOVE_THRESHOLD) {
-            this.mode = Mode.TOUCH;
+            gyroEmt.setEmmittingMode(GyroSignalEmitter.EmittingMode.STOP);
             actionLauncher.launchAction(ActionBuilder.newAction(Header.TOUCH)
                     .setTouchMove(model.getDelta())
                     .getResult());
         } else {
-            this.mode = Mode.SWIPE;
+            gyroEmt.setEmmittingMode(GyroSignalEmitter.EmittingMode.SWIPE);
         }
     }
 
@@ -75,7 +72,7 @@ class TouchMediator implements View.OnTouchListener {
             actionLauncher.launchAction(builder.getResult());
         }
 
-        this.mode = Mode.NONE;
+        gyroEmt.setEmmittingMode(GyroSignalEmitter.EmittingMode.MOVE);
     }
 
 
