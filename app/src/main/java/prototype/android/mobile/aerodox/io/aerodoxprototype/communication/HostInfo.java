@@ -28,7 +28,19 @@ public class HostInfo implements Serializable {
     public String getAddress() {
         return this.address;
     }
-
+    
+    @Override
+    public boolean equals(Object o) {
+        if (o instanceof HostInfo) {
+            HostInfo info = (HostInfo) o;
+            return info.getAddress().equals(this.getAddress()) &&
+                    info.getHostname().equals(this.getHostname()) &&
+                    info.getMode().equals(this.getMode());
+        }
+        
+        return false;
+    }
+    
     @Override
     public String toString() {
         return this.displayString;

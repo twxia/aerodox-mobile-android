@@ -55,7 +55,10 @@ public class ConnectActivity extends Activity {
     private void initCallbacks() {
         this.receiver = new HostFoundReceiver(new Handler() {
             public void handleMessage(Message msg) {
-                listAdapter.add((HostInfo)msg.obj);
+                HostInfo info = (HostInfo) msg.obj;
+                if(listAdapter.getPosition(info) < 0) { // not found before
+                    listAdapter.add(info);
+                }
             }
         });
 
@@ -176,8 +179,8 @@ public class ConnectActivity extends Activity {
     private void startScan() {
         scanner.stopScanning();
         listAdapter.clear();
-        ipLoadingLayout.setVisibility(View.VISIBLE);
-        System.out.println("start scanning");
+
         scanner.scan(loadingLayoutHider);
+        ipLoadingLayout.setVisibility(View.VISIBLE);
     }
 }

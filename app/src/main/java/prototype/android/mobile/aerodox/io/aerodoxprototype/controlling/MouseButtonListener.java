@@ -57,7 +57,9 @@ public class MouseButtonListener implements View.OnTouchListener {
 
     private boolean checkGyroLock(ButtonKey btnKey, long eventTime) {
         lastDownTime.put(btnKey, eventTime);
-        if (Math.abs(lastDownTime.get(ButtonKey.LEFT).longValue() - lastDownTime.get(ButtonKey.RIGHT).longValue()) <= Config.MAX_CLICK_DURATION) {
+        long duration =Math.abs(lastDownTime.get(ButtonKey.LEFT).longValue() - lastDownTime.get(ButtonKey.RIGHT).longValue());
+
+        if (duration <= Config.MAX_LOCK_DURATION) {
             if (this.gyroEmt.isLocked()) {
                 gyroEmt.unlock();
             } else {
