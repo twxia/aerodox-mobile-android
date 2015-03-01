@@ -1,4 +1,4 @@
-package prototype.android.mobile.aerodox.io.aerodoxprototype.networking;
+package prototype.android.mobile.aerodox.io.aerodoxprototype.communication;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -9,43 +9,30 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
-import java.net.InetSocketAddress;
-import java.net.Socket;
-import java.net.SocketAddress;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
- * Created by maeglin89273 on 2/25/15.
+ * Created by maeglin89273 on 3/1/15.
  */
-public class TCPConnection extends BasicConnection {
-    private Socket socket;
+public abstract class StreamingConnection extends BasicConnection {
+    private StreamingSocket socket;
     private Writer socketWriter;
     private BufferedReader socketReader;
-    private SocketAddress clientIP;
+    private boolean startSeparator = false;
 
-    private boolean startSeperator = false;
-
-    public TCPConnection(String ip) {
-        clientIP = new InetSocketAddress(ip, Config.TCP_PORT);
+    protected StreamingConnection(String address) {
+        super(address);
     }
 
     @Override
-    protected void connectSocket() throws IOException {
-
-        socket = new Socket();
-        //add socket configuration here
-        socket.setSendBufferSize(120);
-
-        socket.connect(clientIP, Config.TIMEOUT);
-
-        initWriterAndReader();
-
+    public void connectSocket() throws IOException {
+        StreamingSocket socket = this.connectAsStreamingSocket();
+        this.setSocketAndStreams(socket);
     }
-
-    private void initWriterAndReader() throws IOException {
-        socketWriter = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
-        socketReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+    protected abstract StreamingSocket connectAsStreamingSocket() throws IOException;
+    private void setSocketAndStreams(StreamingSocket sSocket) throws IOException {
+        this.socket = sSocket;
+        socketWriter = new BufferedWriter(new OutputStreamWriter(this.socket.getOutputStream()));
+        socketReader = new BufferedReader(new InputStreamReader(this.socket.getInputStream()));
 
         Thread readerThread = new Thread() {
             @Override
@@ -56,6 +43,7 @@ public class TCPConnection extends BasicConnection {
                         recieveResponse(new JSONObject(jsonLiteral));
                     } catch (IOException | JSONException | NullPointerException e) {
 //                        e.printStackTrace();
+                    } finally {
                         close();
                     }
                 }
@@ -68,12 +56,12 @@ public class TCPConnection extends BasicConnection {
     protected void sendAction(JSONObject jsonObject) {
         try {
 
-            socketWriter.write(startSeperator? ",": "[");
+            socketWriter.write(startSeparator ? ",": "[");
 
             String packet = jsonObject.toString();
             socketWriter.write(packet);
             socketWriter.flush();
-            startSeperator = true;
+            startSeparator = true;
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -83,10 +71,13 @@ public class TCPConnection extends BasicConnection {
     @Override
     protected void closeConnection() {
         try {
-            if (!socket.isOutputShutdown()) {
-                socketWriter.write("]");
-                socketWriter.flush();
-            }
+            socketWriter.write("]");
+            socketWriter.flush();
+        } catch (IOException e) {
+//            e.printStackTrace();
+        }
+
+        try {
             socket.close();
         } catch (IOException e) {
             e.printStackTrace();
@@ -95,6 +86,6 @@ public class TCPConnection extends BasicConnection {
 
     @Override
     public boolean isConnected() {
-        return socket !=null? socket.isConnected(): false;
+        return socket != null? socket.isConnected(): false;
     }
 }

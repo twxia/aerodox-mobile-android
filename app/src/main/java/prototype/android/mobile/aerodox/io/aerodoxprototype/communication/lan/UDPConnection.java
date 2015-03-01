@@ -1,4 +1,4 @@
-package prototype.android.mobile.aerodox.io.aerodoxprototype.networking;
+package prototype.android.mobile.aerodox.io.aerodoxprototype.communication.lan;
 
 import org.json.JSONObject;
 
@@ -9,6 +9,8 @@ import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.net.SocketException;
 
+import prototype.android.mobile.aerodox.io.aerodoxprototype.communication.BasicConnection;
+
 /**
  * Created by xia on 2/21/15.
  */
@@ -16,8 +18,8 @@ public class UDPConnection extends BasicConnection {
     private DatagramSocket socket;
     private SocketAddress clientIP;
 
-    public UDPConnection(String ip){
-        clientIP = new InetSocketAddress(ip, Config.UDP_PORT);
+    public UDPConnection(String address){
+        super(address);
     }
 
     @Override
@@ -25,7 +27,7 @@ public class UDPConnection extends BasicConnection {
 
         socket = new DatagramSocket();
         socket.setSendBufferSize(120);
-        socket.connect(clientIP);
+        socket.connect(new InetSocketAddress(this.address, Config.UDP_PORT));
 
     }
 

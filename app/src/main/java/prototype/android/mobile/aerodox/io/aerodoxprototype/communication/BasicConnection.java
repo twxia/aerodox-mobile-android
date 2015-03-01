@@ -1,4 +1,4 @@
-package prototype.android.mobile.aerodox.io.aerodoxprototype.networking;
+package prototype.android.mobile.aerodox.io.aerodoxprototype.communication;
 
 import android.os.Handler;
 import android.os.Looper;
@@ -11,8 +11,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import prototype.android.mobile.aerodox.io.aerodoxprototype.controling.ActionBuilder;
-import prototype.android.mobile.aerodox.io.aerodoxprototype.controling.Header;
+import prototype.android.mobile.aerodox.io.aerodoxprototype.controlling.Header;
 
 /**
  * Created by maeglin89273 on 2/25/15.
@@ -21,11 +20,13 @@ public abstract class BasicConnection implements Connection {
     private static final int SEND = 1;
     private static final int RECIEVE = 2;
 
+    protected String address;
     private Handler messageHandler;
     private Thread executor;
     private Map<String, ResponseHandler> rspHandlerMap;
 
-    protected BasicConnection() {
+    protected BasicConnection(String address) {
+        this.address = address;
         this.rspHandlerMap = new HashMap<>();
 
     }

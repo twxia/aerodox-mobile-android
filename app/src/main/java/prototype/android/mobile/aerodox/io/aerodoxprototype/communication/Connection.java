@@ -1,8 +1,8 @@
-package prototype.android.mobile.aerodox.io.aerodoxprototype.networking;
+package prototype.android.mobile.aerodox.io.aerodoxprototype.communication;
 
 import org.json.JSONObject;
 
-import prototype.android.mobile.aerodox.io.aerodoxprototype.controling.Header;
+import prototype.android.mobile.aerodox.io.aerodoxprototype.controlling.Header;
 
 /**
  * Created by maeglin89273 on 2/25/15.

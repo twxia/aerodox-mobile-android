@@ -1,4 +1,4 @@
-package prototype.android.mobile.aerodox.io.aerodoxprototype.networking;
+package prototype.android.mobile.aerodox.io.aerodoxprototype.communication;
 
 import java.io.Serializable;
 

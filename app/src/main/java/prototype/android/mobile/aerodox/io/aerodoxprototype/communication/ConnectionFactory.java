@@ -1,4 +1,6 @@
-package prototype.android.mobile.aerodox.io.aerodoxprototype.networking;
+package prototype.android.mobile.aerodox.io.aerodoxprototype.communication;
+
+import prototype.android.mobile.aerodox.io.aerodoxprototype.communication.lan.LANConnection;
 
 /**
  * Created by maeglin89273 on 2/27/15.

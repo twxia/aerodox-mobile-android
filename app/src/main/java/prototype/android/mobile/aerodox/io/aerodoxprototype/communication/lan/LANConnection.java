@@ -1,4 +1,4 @@
-package prototype.android.mobile.aerodox.io.aerodoxprototype.networking;
+package prototype.android.mobile.aerodox.io.aerodoxprototype.communication.lan;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -6,7 +6,9 @@ import org.json.JSONObject;
 import java.util.HashSet;
 import java.util.Set;
 
-import prototype.android.mobile.aerodox.io.aerodoxprototype.controling.Header;
+import prototype.android.mobile.aerodox.io.aerodoxprototype.communication.Connection;
+import prototype.android.mobile.aerodox.io.aerodoxprototype.communication.ResponseHandler;
+import prototype.android.mobile.aerodox.io.aerodoxprototype.controlling.Header;
 
 /**
  * Created by maeglin89273 on 2/25/15.

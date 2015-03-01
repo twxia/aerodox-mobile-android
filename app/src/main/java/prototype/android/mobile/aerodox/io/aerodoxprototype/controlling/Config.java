@@ -1,4 +1,4 @@
-package prototype.android.mobile.aerodox.io.aerodoxprototype.controling;
+package prototype.android.mobile.aerodox.io.aerodoxprototype.controlling;
 
 /**
  * Created by xia on 2/21/15.

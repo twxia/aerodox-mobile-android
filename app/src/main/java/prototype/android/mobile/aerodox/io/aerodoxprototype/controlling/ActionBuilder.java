@@ -1,4 +1,4 @@
-package prototype.android.mobile.aerodox.io.aerodoxprototype.controling;
+package prototype.android.mobile.aerodox.io.aerodoxprototype.controlling;
 
 import org.json.JSONArray;
 import org.json.JSONException;

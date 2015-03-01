@@ -1,9 +1,7 @@
-package prototype.android.mobile.aerodox.io.aerodoxprototype.networking;
+package prototype.android.mobile.aerodox.io.aerodoxprototype.communication.lan;
 
 import android.annotation.TargetApi;
 import android.os.Build;
-import android.os.Handler;
-import android.os.Message;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -30,22 +28,30 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-import prototype.android.mobile.aerodox.io.aerodoxprototype.controling.ActionBuilder;
-import prototype.android.mobile.aerodox.io.aerodoxprototype.controling.Header;
+import prototype.android.mobile.aerodox.io.aerodoxprototype.communication.HostFoundReceiver;
+import prototype.android.mobile.aerodox.io.aerodoxprototype.communication.HostInfo;
+import prototype.android.mobile.aerodox.io.aerodoxprototype.communication.HostScanner;
+import prototype.android.mobile.aerodox.io.aerodoxprototype.controlling.ActionBuilder;
+import prototype.android.mobile.aerodox.io.aerodoxprototype.controlling.Header;
 
 /**
  * Created by xia on 2/20/15.
  */
-public class LANScanner {
+public class LANScanner implements HostScanner {
 
-    private Handler mHandler;
+    private HostFoundReceiver receiver;
+    private ExecutorService executor;
+    private boolean scanning;
 
-    public LANScanner(Handler hostMessageReciever) {
-        this.mHandler = hostMessageReciever;
+    public LANScanner(HostFoundReceiver hostMessageReciever) {
+        this.receiver = hostMessageReciever;
+        this.executor = Executors.newFixedThreadPool(35);
+        this.scanning = false;
     }
 
-
+    @Override
     public void scan() {
+        this.scanning = true;
         List<String> deviceIPs = getActiveIPs();
 
         for(String deviceIP : deviceIPs){
@@ -53,8 +59,18 @@ public class LANScanner {
         }
     }
 
+    @Override
+    public boolean isScanning() {
+        return this.scanning;
+    }
+
+    @Override
+    public void stopScanning() {
+        this.executor.shutdownNow();
+    }
+
     private void scanLAN(String IP){
-        ExecutorService executor = Executors.newFixedThreadPool(35);
+
         List<Future<HostInfo>> futures = new ArrayList<>();
         Future<HostInfo> future;
 
@@ -70,20 +86,14 @@ public class LANScanner {
             try {
                 HostInfo hostInfo = f.get();
                 if (hostInfo != null)
-                    sendAvaliableHostMessage(hostInfo);
+                    this.receiver.hostFound(hostInfo);
 
             } catch (ExecutionException | InterruptedException e) {
                 e.printStackTrace();
             }
         }
-    }
 
-    //send the scanning result immediately, leveraging concurrency
-    private void sendAvaliableHostMessage(HostInfo hostInfo) {
-        Message msg = new Message();
-        msg.obj = hostInfo;
-
-        this.mHandler.sendMessage(msg);
+        this.scanning = false;
     }
 
     private static List<String> getLANIPs(String localIP){
@@ -152,14 +162,13 @@ public class LANScanner {
         return host;
     }
 
-
-
     private static class SyncTCPConnection {
         private final InetSocketAddress clientIP;
 
         private SyncTCPConnection(String ip, int port) {
             clientIP = new InetSocketAddress(ip, port);
         }
+
 
         @TargetApi(Build.VERSION_CODES.KITKAT)
         public JSONObject post(JSONObject request) throws IOException {
@@ -169,14 +178,20 @@ public class LANScanner {
             JSONObject response = null;
             try (Writer writer = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
                  BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
+
+                //write request
                 writer.write("[");
                 writer.write(request.toString());
                 writer.flush();
 
+                //receive response
                 response = new JSONObject(reader.readLine());
+
+                //close socket
                 writer.write("]");
                 writer.flush();
                 socket.close();
+
                 return response;
             } catch (JSONException| IOException e) {
                 e.printStackTrace();

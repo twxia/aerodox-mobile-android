@@ -30,7 +30,19 @@
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
             android:layout_below="@+id/imgLogo"
-            android:layout_above="@+id/btnRefresh">
+            android:layout_above="@+id/btnRefresh"
+            android:id="@+id/linearLayout">
+
+            <Switch
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Mode"
+                android:id="@+id/connModeSwitch"
+                android:layout_above="@+id/linearLayout"
+                android:layout_alignParentLeft="true"
+                android:layout_alignParentStart="true"
+                android:textOff="LAN"
+                android:textOn="Bluetooth" />
 
             <TextView
                 android:layout_width="wrap_content"

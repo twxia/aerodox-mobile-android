@@ -1,13 +1,9 @@
-package prototype.android.mobile.aerodox.io.aerodoxprototype;
+package prototype.android.mobile.aerodox.io.aerodoxprototype.controlling;
 
 import android.view.MotionEvent;
 import android.view.View;
 
-import prototype.android.mobile.aerodox.io.aerodoxprototype.controling.ActionBuilder;
-import prototype.android.mobile.aerodox.io.aerodoxprototype.controling.ButtonKey;
-import prototype.android.mobile.aerodox.io.aerodoxprototype.controling.Config;
-import prototype.android.mobile.aerodox.io.aerodoxprototype.controling.Header;
-import prototype.android.mobile.aerodox.io.aerodoxprototype.networking.Connection;
+import prototype.android.mobile.aerodox.io.aerodoxprototype.communication.Connection;
 
 /**
 * Created by maeglin89273 on 2/23/15.

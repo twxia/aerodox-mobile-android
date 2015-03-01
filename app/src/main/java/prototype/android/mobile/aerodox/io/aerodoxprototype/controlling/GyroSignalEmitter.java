@@ -1,4 +1,4 @@
-package prototype.android.mobile.aerodox.io.aerodoxprototype;
+package prototype.android.mobile.aerodox.io.aerodoxprototype.controlling;
 
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -8,9 +8,9 @@ import android.hardware.SensorManager;
 import java.util.HashMap;
 import java.util.Map;
 
-import prototype.android.mobile.aerodox.io.aerodoxprototype.controling.ActionBuilder;
-import prototype.android.mobile.aerodox.io.aerodoxprototype.controling.Header;
-import prototype.android.mobile.aerodox.io.aerodoxprototype.networking.Connection;
+import prototype.android.mobile.aerodox.io.aerodoxprototype.controlling.ActionBuilder;
+import prototype.android.mobile.aerodox.io.aerodoxprototype.controlling.Header;
+import prototype.android.mobile.aerodox.io.aerodoxprototype.communication.Connection;
 
 /**
  * Created by maeglin89273 on 2/28/15.

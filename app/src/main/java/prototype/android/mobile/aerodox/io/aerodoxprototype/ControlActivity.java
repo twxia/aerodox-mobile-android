@@ -13,13 +13,16 @@ import android.widget.Button;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import prototype.android.mobile.aerodox.io.aerodoxprototype.controling.ActionBuilder;
-import prototype.android.mobile.aerodox.io.aerodoxprototype.controling.Config;
-import prototype.android.mobile.aerodox.io.aerodoxprototype.controling.Header;
-import prototype.android.mobile.aerodox.io.aerodoxprototype.networking.Connection;
-import prototype.android.mobile.aerodox.io.aerodoxprototype.networking.ConnectionFactory;
-import prototype.android.mobile.aerodox.io.aerodoxprototype.networking.HostInfo;
-import prototype.android.mobile.aerodox.io.aerodoxprototype.networking.ResponseHandler;
+import prototype.android.mobile.aerodox.io.aerodoxprototype.controlling.ActionBuilder;
+import prototype.android.mobile.aerodox.io.aerodoxprototype.controlling.Config;
+import prototype.android.mobile.aerodox.io.aerodoxprototype.controlling.GyroSignalEmitter;
+import prototype.android.mobile.aerodox.io.aerodoxprototype.controlling.Header;
+import prototype.android.mobile.aerodox.io.aerodoxprototype.communication.Connection;
+import prototype.android.mobile.aerodox.io.aerodoxprototype.communication.ConnectionFactory;
+import prototype.android.mobile.aerodox.io.aerodoxprototype.communication.HostInfo;
+import prototype.android.mobile.aerodox.io.aerodoxprototype.communication.ResponseHandler;
+import prototype.android.mobile.aerodox.io.aerodoxprototype.controlling.MouseButtonListener;
+import prototype.android.mobile.aerodox.io.aerodoxprototype.controlling.TouchMediator;
 
 
 public class ControlActivity extends Activity {

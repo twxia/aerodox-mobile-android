@@ -6,7 +6,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.view.View;
-import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -17,8 +16,8 @@ import android.widget.ListView;
 import java.util.ArrayList;
 import java.util.List;
 
-import prototype.android.mobile.aerodox.io.aerodoxprototype.networking.HostInfo;
-import prototype.android.mobile.aerodox.io.aerodoxprototype.networking.LANScanner;
+import prototype.android.mobile.aerodox.io.aerodoxprototype.communication.HostInfo;
+import prototype.android.mobile.aerodox.io.aerodoxprototype.communication.lan.LANScanner;
 
 /**
  * Created by xia on 1/18/15.
