@@ -5,6 +5,7 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
 import android.os.Build;
+import android.os.ParcelUuid;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -25,8 +26,10 @@ public class BluetoothConnection extends StreamingConnection {
     @Override
     protected StreamingSocket connectAsStreamingSocket() throws IOException {
         BluetoothDevice device = BluetoothAdapter.getDefaultAdapter().getRemoteDevice(this.address);
+
         BluetoothSocket socket = device.createRfcommSocketToServiceRecord(Config.uuid);
         socket.connect();
+
         return new StreamingSocketAdapter(socket);
     }
 

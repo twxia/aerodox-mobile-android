@@ -7,16 +7,14 @@ import java.io.Serializable;
  */
 public class HostInfo implements Serializable {
 
-
-    public enum HostType{LAN, BLUETOOTH};
     private final String hostname;
-    private final HostType type;
+    private final Config.Mode mode;
     private final String address;
     private final String displayString;
 
-    public HostInfo(String hostname, HostType type, String address) {
+    public HostInfo(String hostname, Config.Mode mode, String address) {
         this.hostname = hostname;
-        this.type = type;
+        this.mode = mode;
         this.address = address;
         this.displayString = hostname + "\n" + address;
     }
@@ -24,8 +22,8 @@ public class HostInfo implements Serializable {
     public String getHostname() {
         return this.hostname;
     }
-    public HostType getType() {
-        return this.type;
+    public Config.Mode getMode() {
+        return this.mode;
     }
     public String getAddress() {
         return this.address;

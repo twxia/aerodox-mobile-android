@@ -37,16 +37,17 @@ public abstract class StreamingConnection extends BasicConnection {
         Thread readerThread = new Thread() {
             @Override
             public void run() {
-                for (;!socket.isClosed();) {
-                    try {
+                try {
+                    for (;!socket.isClosed();) {
                         String jsonLiteral = socketReader.readLine();
-                        recieveResponse(new JSONObject(jsonLiteral));
-                    } catch (IOException | JSONException | NullPointerException e) {
-//                        e.printStackTrace();
-                    } finally {
-                        close();
+                        receiveResponse(new JSONObject(jsonLiteral));
                     }
+                } catch (IOException | JSONException | NullPointerException e) {
+                    e.printStackTrace();
+                } finally {
+                    close();
                 }
+
             }
         };
         readerThread.start();

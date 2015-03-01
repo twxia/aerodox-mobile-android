@@ -1,5 +1,6 @@
 package prototype.android.mobile.aerodox.io.aerodoxprototype.communication;
 
+import prototype.android.mobile.aerodox.io.aerodoxprototype.communication.bluetooth.BluetoothConnection;
 import prototype.android.mobile.aerodox.io.aerodoxprototype.communication.lan.LANConnection;
 
 /**
@@ -7,10 +8,12 @@ import prototype.android.mobile.aerodox.io.aerodoxprototype.communication.lan.LA
  */
 public abstract class ConnectionFactory {
     public static Connection newConnection(HostInfo args) {
-        switch (args.getType()) {
+        String address = args.getAddress();
+        switch (args.getMode()) {
             case LAN:
-                return new LANConnection(args.getAddress());
+                return new LANConnection(address);
             case BLUETOOTH:
+                return new BluetoothConnection(address);
         }
 
         return null;

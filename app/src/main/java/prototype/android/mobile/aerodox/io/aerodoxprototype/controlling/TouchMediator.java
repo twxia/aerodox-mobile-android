@@ -8,7 +8,7 @@ import prototype.android.mobile.aerodox.io.aerodoxprototype.communication.Connec
 /**
 * Created by maeglin89273 on 2/23/15.
 */
-class TouchMediator implements View.OnTouchListener {
+public class TouchMediator implements View.OnTouchListener {
 
 
     private GyroSignalEmitter gyroEmt;
@@ -16,7 +16,7 @@ class TouchMediator implements View.OnTouchListener {
     private final TouchModel model;
 
 
-    TouchMediator(GyroSignalEmitter gyroEmt, Connection actionLauncher) {
+    public TouchMediator(GyroSignalEmitter gyroEmt, Connection actionLauncher) {
         this.gyroEmt = gyroEmt;
         this.actionLauncher = actionLauncher;
         this.model = new TouchModel();

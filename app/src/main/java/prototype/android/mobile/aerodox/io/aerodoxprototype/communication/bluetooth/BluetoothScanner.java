@@ -8,9 +8,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Handler;
 
-import prototype.android.mobile.aerodox.io.aerodoxprototype.communication.HostFoundReceiver;
-import prototype.android.mobile.aerodox.io.aerodoxprototype.communication.HostInfo;
-import prototype.android.mobile.aerodox.io.aerodoxprototype.communication.HostScanner;
+import prototype.android.mobile.aerodox.io.aerodoxprototype.communication.*;
 
 /**
  * Created by maeglin89273 on 3/1/15.
@@ -19,6 +17,7 @@ public class BluetoothScanner extends BroadcastReceiver implements HostScanner {
     private HostFoundReceiver receiver;
     private Context register;
     private boolean scanning;
+    private Handler doneCallback;
     public BluetoothScanner(Context register, HostFoundReceiver revceiver) {
         this.register = register;
         this.receiver = revceiver;
@@ -31,7 +30,7 @@ public class BluetoothScanner extends BroadcastReceiver implements HostScanner {
         switch (intent.getAction()) {
             case BluetoothDevice.ACTION_FOUND:
                 BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-                HostInfo host = new HostInfo(device.getName(), HostInfo.HostType.BLUETOOTH, device.getAddress());
+                HostInfo host = new HostInfo(device.getName(), Config.Mode.BLUETOOTH, device.getAddress());
                 receiver.hostFound(host);
                 break;
 
@@ -42,7 +41,8 @@ public class BluetoothScanner extends BroadcastReceiver implements HostScanner {
     }
 
     @Override
-    public void scan() {
+    public void scan(Handler doneCallback) {
+        this.doneCallback = doneCallback;
         IntentFilter foundFilter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
         IntentFilter finishFilter = new IntentFilter(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
 
@@ -50,6 +50,7 @@ public class BluetoothScanner extends BroadcastReceiver implements HostScanner {
         this.register.registerReceiver(this, finishFilter);
 
         this.scanning = BluetoothAdapter.getDefaultAdapter().startDiscovery();
+
     }
 
     @Override
@@ -59,8 +60,14 @@ public class BluetoothScanner extends BroadcastReceiver implements HostScanner {
 
     @Override
     public void stopScanning() {
-        BluetoothAdapter.getDefaultAdapter().cancelDiscovery();
-        this.register.unregisterReceiver(this);
-        this.scanning = false;
+        if (isScanning()) {
+            BluetoothAdapter.getDefaultAdapter().cancelDiscovery();
+            this.register.unregisterReceiver(this);
+            this.scanning = false;
+
+            doneCallback.sendEmptyMessage(0);
+            doneCallback = null;
+
+        }
     }
 }

@@ -2,6 +2,7 @@ package prototype.android.mobile.aerodox.io.aerodoxprototype.communication.lan;
 
 import android.annotation.TargetApi;
 import android.os.Build;
+import android.os.Handler;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -31,6 +32,7 @@ import java.util.concurrent.Future;
 import prototype.android.mobile.aerodox.io.aerodoxprototype.communication.HostFoundReceiver;
 import prototype.android.mobile.aerodox.io.aerodoxprototype.communication.HostInfo;
 import prototype.android.mobile.aerodox.io.aerodoxprototype.communication.HostScanner;
+
 import prototype.android.mobile.aerodox.io.aerodoxprototype.controlling.ActionBuilder;
 import prototype.android.mobile.aerodox.io.aerodoxprototype.controlling.Header;
 
@@ -41,22 +43,33 @@ public class LANScanner implements HostScanner {
 
     private HostFoundReceiver receiver;
     private ExecutorService executor;
+    private List<Future<HostInfo>> potentialHosts;
     private boolean scanning;
+    private Handler doneCallback;
 
     public LANScanner(HostFoundReceiver hostMessageReciever) {
         this.receiver = hostMessageReciever;
-        this.executor = Executors.newFixedThreadPool(35);
+
+        this.potentialHosts = new ArrayList<>();
         this.scanning = false;
     }
 
     @Override
-    public void scan() {
+    public void scan(Handler doneCallback) {
         this.scanning = true;
+        this.doneCallback = doneCallback;
+        this.executor = Executors.newFixedThreadPool(35);
+        this.potentialHosts.clear();
+
         List<String> deviceIPs = getActiveIPs();
 
         for(String deviceIP : deviceIPs){
-            scanLAN(deviceIP);
+            scanLAN(deviceIP, doneCallback);
         }
+
+        executor.shutdown();
+
+        startCollecting();
     }
 
     @Override
@@ -66,34 +79,44 @@ public class LANScanner implements HostScanner {
 
     @Override
     public void stopScanning() {
-        this.executor.shutdownNow();
+        if (isScanning()) {
+            this.executor.shutdownNow();
+        }
     }
 
-    private void scanLAN(String IP){
-
-        List<Future<HostInfo>> futures = new ArrayList<>();
+    private void scanLAN(String IP, final Handler doneListener){
         Future<HostInfo> future;
 
         List<String> LANIPs = getLANIPs(IP);
         for (String LANIP : LANIPs){
             future = executor.submit(makeHostChecker(LANIP, Config.TCP_PORT));
-            futures.add(future);
+            potentialHosts.add(future);
         }
+    }
 
-        executor.shutdown();
 
-        for (Future<HostInfo> f : futures) {
-            try {
-                HostInfo hostInfo = f.get();
-                if (hostInfo != null)
-                    this.receiver.hostFound(hostInfo);
+    private void startCollecting() {
 
-            } catch (ExecutionException | InterruptedException e) {
-                e.printStackTrace();
+        Thread collector = new Thread() {
+            @Override
+            public void run() {
+                for (Future<HostInfo> f : potentialHosts) {
+                    try {
+                        HostInfo hostInfo = f.get();
+                        if (hostInfo != null)
+                            receiver.hostFound(hostInfo);
+
+                    } catch (ExecutionException | InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                scanning = false;
+                doneCallback.sendEmptyMessage(0);
+                doneCallback = null;
             }
-        }
-
-        this.scanning = false;
+        };
+        collector.start();
     }
 
     private static List<String> getLANIPs(String localIP){
@@ -113,7 +136,7 @@ public class LANScanner implements HostScanner {
 
                     String host = scanHost(ip, port);
                     if (host != null) {
-                        return new HostInfo(host, HostInfo.HostType.LAN, ip);
+                        return new HostInfo(host, Config.Mode.LAN, ip);
                     }
                     return null;
             }

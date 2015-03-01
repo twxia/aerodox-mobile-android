@@ -5,7 +5,7 @@ import java.util.UUID;
 /**
  * Created by maeglin89273 on 2/28/15.
  */
-interface Config {
+interface Config extends prototype.android.mobile.aerodox.io.aerodoxprototype.communication.Config {
     /* >///< */
-    public static final UUID uuid = UUID.fromString("43432e4c-6961-6f3c-3357-432e48736961");
+    public static final UUID uuid = UUID.fromString("43432E4C-6961-6F3C-3357-432E48736961");
 }

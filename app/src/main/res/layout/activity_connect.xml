@@ -47,7 +47,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Select your desktop device&apos;s IP to connect:"
+                android:text="Select a hostname that you want to connect:"
                 android:id="@+id/textView6"
                 android:layout_alignParentTop="true"
                 android:layout_centerHorizontal="true" />

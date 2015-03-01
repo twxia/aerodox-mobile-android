@@ -12,15 +12,13 @@ import prototype.android.mobile.aerodox.io.aerodoxprototype.communication.Connec
 /**
 * Created by maeglin89273 on 2/23/15.
 */
-class MouseButtonListener implements View.OnTouchListener {
+public class MouseButtonListener implements View.OnTouchListener {
 
     private GyroSignalEmitter gyroEmt;
     private Connection actionLauncher;
     private Map<ButtonKey, Long> lastDownTime;
 
-
-
-    MouseButtonListener(GyroSignalEmitter gyroEmt, Connection actionLauncher) {
+    public MouseButtonListener(GyroSignalEmitter gyroEmt, Connection actionLauncher) {
         this.gyroEmt = gyroEmt;
         this.actionLauncher = actionLauncher;
 

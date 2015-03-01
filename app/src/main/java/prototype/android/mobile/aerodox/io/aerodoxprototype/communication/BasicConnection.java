@@ -66,9 +66,11 @@ public abstract class BasicConnection implements Connection {
                     };
                     Looper.loop();
                 } catch (IOException e) {
-//                    e.printStackTrace();
+                    e.printStackTrace();
+                } finally {
+                    processResponse(buildPsudoCloseResponse());
                 }
-                processResponse(buildPsudoCloseResponse());
+
             }
         };
     }
@@ -105,7 +107,7 @@ public abstract class BasicConnection implements Connection {
         }
     }
 
-    protected void recieveResponse(JSONObject response) {
+    protected void receiveResponse(JSONObject response) {
         this.queueMessage(RECIEVE, response);
     }
 

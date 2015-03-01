@@ -31,7 +31,7 @@ public class LANConnection implements Connection {
         }
     }
 
-    LANConnection(String ip) {
+    public LANConnection(String ip) {
         this.tcp = new TCPConnection(ip);
         this.udp = new UDPConnection(ip);
 
