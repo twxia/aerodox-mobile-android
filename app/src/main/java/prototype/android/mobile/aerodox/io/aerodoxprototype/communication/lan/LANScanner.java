@@ -81,6 +81,7 @@ public class LANScanner implements HostScanner {
     public void stopScanning() {
         if (isScanning()) {
             this.executor.shutdownNow();
+            this.finish();
         }
     }
 
@@ -111,14 +112,18 @@ public class LANScanner implements HostScanner {
                     }
                 }
 
-                scanning = false;
-                doneCallback.sendEmptyMessage(0);
-                doneCallback = null;
+                finish();
             }
         };
         collector.start();
     }
-
+    private void finish() {
+        if (doneCallback != null) {
+            doneCallback.sendEmptyMessage(0);
+            doneCallback = null;
+        }
+        scanning = false;
+    }
     private static List<String> getLANIPs(String localIP){
         List<String> IPs = new ArrayList<>();
         String host = localIP.substring(0, localIP.lastIndexOf('.') + 1);

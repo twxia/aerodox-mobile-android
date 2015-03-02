@@ -130,7 +130,7 @@ public class ConnectActivity extends Activity {
         btnRefresh.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
+                startScan();
             }
         });
     }

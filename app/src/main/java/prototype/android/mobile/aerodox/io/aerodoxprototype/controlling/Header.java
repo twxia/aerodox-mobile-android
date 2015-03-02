@@ -7,6 +7,7 @@ public enum Header {
     CLOSE,
     SCAN,
     CONFIG,
+    ARROW,
     MOVE,
     TOUCH,
     BUTTON,
