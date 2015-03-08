@@ -28,7 +28,9 @@ public abstract class StreamingConnection extends BasicConnection {
         StreamingSocket socket = this.connectAsStreamingSocket();
         this.setSocketAndStreams(socket);
     }
+
     protected abstract StreamingSocket connectAsStreamingSocket() throws IOException;
+
     private void setSocketAndStreams(StreamingSocket sSocket) throws IOException {
         this.socket = sSocket;
         socketWriter = new BufferedWriter(new OutputStreamWriter(this.socket.getOutputStream()));

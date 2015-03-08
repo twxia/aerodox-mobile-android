@@ -36,7 +36,7 @@ public class TouchMediator implements View.OnTouchListener {
                 break;
 
             case MotionEvent.ACTION_UP:
-               handleUp(event.getEventTime() - event.getDownTime());
+               handleUp(event.getX(), event.getY(), event.getEventTime() - event.getDownTime());
                 break;
 
             default:
@@ -52,19 +52,19 @@ public class TouchMediator implements View.OnTouchListener {
     }
 
     private void handleMove(float x, float y) {
-        double distanceSquare = model.moving(x, y);
+        double speedSquare = model.moving(x, y);
         if (gyroEmt.isLocked()) {
             touchMove();
         } else { //unlocked
-            if (distanceSquare < Config.MOVE_THRESHOLD) {
+            if (speedSquare < Config.MOVE_THRESHOLD) {
                 gyroEmt.setEmmittingMode(GyroSignalEmitter.EmittingMode.SWIPE);
             }
         }
     }
 
-    private void handleUp(long downDuration) {
-
-        if(TouchModel.getSquare(model.getSpeed()) < Config.MOVE_THRESHOLD) {
+    private void handleUp(float x, float y, long downDuration) {
+        double speedSquare = TouchModel.getSquare(model.getSpeed());
+        if(speedSquare <= Config.MOVE_THRESHOLD) {
            if(downDuration < Config.MAX_CLICK_DURATION) {
                singleClick();
            }
@@ -93,8 +93,17 @@ public class TouchMediator implements View.OnTouchListener {
         ActionBuilder builder = ActionBuilder.newAction(Header.BUTTON);
         builder.setBtnState(ButtonKey.LEFT, true);
         actionLauncher.launchAction(builder.getResult());
+        imitateDelay();
         builder.setBtnState(ButtonKey.LEFT, false);
         actionLauncher.launchAction(builder.getResult());
+    }
+
+    private void imitateDelay() {
+        try {
+            Thread.sleep(55);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     private void touchMove() {
@@ -132,7 +141,7 @@ public class TouchMediator implements View.OnTouchListener {
             this.distance[0] += speed[0];
             this.distance[1] += speed[1];
 
-            return getSquare(speed);
+            return getSquare(this.speed);
         }
 
         public static double getSquare(double[] vec) {

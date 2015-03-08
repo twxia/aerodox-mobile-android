@@ -24,18 +24,20 @@ public class BluetoothScanner extends BroadcastReceiver implements HostScanner {
         this.scanning = false;
     }
 
-    @Override
     public void onReceive(Context context, Intent intent) {
 
         switch (intent.getAction()) {
             case BluetoothDevice.ACTION_FOUND:
                 BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-                HostInfo host = new HostInfo(device.getName(), Config.Mode.BLUETOOTH, device.getAddress());
-                receiver.hostFound(host);
+                if (device.getName() != null) {
+                    HostInfo host = new HostInfo(device.getName(), Config.Mode.BLUETOOTH, device.getAddress());
+                    receiver.hostFound(host);
+                }
                 break;
 
             case BluetoothAdapter.ACTION_DISCOVERY_FINISHED:
                 this.stopScanning();
+                break;
         }
 
     }

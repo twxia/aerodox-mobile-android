@@ -112,12 +112,17 @@ public class ControlActivity extends Activity {
             public void handle(JSONObject rspContent) {
                 System.out.println("Connection is close");
                 //popup connection-closed message
+                finish();
             }
         });
         actionLauncher.start();
     }
 
-
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        actionLauncher.close();
+    }
 
     @Override
     protected void onResume() {

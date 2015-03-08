@@ -23,20 +23,19 @@ public class MouseButtonListener implements View.OnTouchListener {
         this.actionLauncher = actionLauncher;
 
         lastDownTime = new HashMap<ButtonKey, Long>();
-        lastDownTime.put(ButtonKey.LEFT, 0L);
-        lastDownTime.put(ButtonKey.RIGHT, 0L);
+        this.resetLastDownTime();
     }
 
     @Override
     public boolean onTouch(View v, MotionEvent event) {
         ButtonKey btnKey = (v.getId() == R.id.btnLeft) ? ButtonKey.LEFT : ButtonKey.RIGHT;
 
-        boolean btnPress, isLock = false;
+        boolean btnPress, isLockAction = false;
 
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
                 btnPress = true;
-                isLock = checkGyroLock(btnKey, event.getEventTime());
+                isLockAction = checkGyroLock(btnKey, event.getEventTime());
 
                 break;
             case MotionEvent.ACTION_UP:
@@ -47,7 +46,7 @@ public class MouseButtonListener implements View.OnTouchListener {
                 return false;
         }
 
-        if (!isLock) {
+        if (!isLockAction) {
             actionLauncher.launchAction(ActionBuilder.newAction(Header.BUTTON)
                     .setBtnState(btnKey, btnPress)
                     .getResult());
@@ -57,7 +56,7 @@ public class MouseButtonListener implements View.OnTouchListener {
 
     private boolean checkGyroLock(ButtonKey btnKey, long eventTime) {
         lastDownTime.put(btnKey, eventTime);
-        long duration =Math.abs(lastDownTime.get(ButtonKey.LEFT).longValue() - lastDownTime.get(ButtonKey.RIGHT).longValue());
+        long duration = Math.abs(lastDownTime.get(ButtonKey.LEFT).longValue() - lastDownTime.get(ButtonKey.RIGHT).longValue());
 
         if (duration <= Config.MAX_LOCK_DURATION) {
             if (this.gyroEmt.isLocked()) {
@@ -65,10 +64,15 @@ public class MouseButtonListener implements View.OnTouchListener {
             } else {
                 gyroEmt.lock();
             }
-
+            this.resetLastDownTime();
             return true;
         }
 
         return false;
+    }
+
+    private void resetLastDownTime() {
+        lastDownTime.put(ButtonKey.LEFT, 0L);
+        lastDownTime.put(ButtonKey.RIGHT, 0L);
     }
 }
